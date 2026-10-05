@@ -11,18 +11,18 @@ const baseHref = 'https://example.test/?existing=1#fragment';
 test('buildShareUrl replaces query params with request text and answer mode', () => {
   assert.equal(
     buildShareUrl(baseHref, 'Can I have a pony?', 'yes'),
-    'https://example.test/?answer=yes&request=Can+I+have+a+pony%3F#fragment'
+    'https://example.test/yes?request=Can+I+have+a+pony%3F#fragment'
   );
   assert.equal(
     buildShareUrl(baseHref, 'Can I have a pony?', 'no'),
-    'https://example.test/?answer=no&request=Can+I+have+a+pony%3F#fragment'
+    'https://example.test/no?request=Can+I+have+a+pony%3F#fragment'
   );
 });
 
 test('buildShareUrl defaults answer mode to yes', () => {
   assert.equal(
     buildShareUrl(baseHref, 'Can I?'),
-    'https://example.test/?answer=yes&request=Can+I%3F#fragment'
+    'https://example.test/yes?request=Can+I%3F#fragment'
   );
 });
 
@@ -34,7 +34,7 @@ test('buildShareText prefixes the request with the answer mode', () => {
 test('buildSocialShareLinks returns encoded provider URLs', () => {
   const yesLinks = buildSocialShareLinks(baseHref, 'Can I?', 'yes');
 
-  assert.equal(yesLinks.url, 'https://example.test/?answer=yes&request=Can+I%3F#fragment');
+  assert.equal(yesLinks.url, 'https://example.test/yes?request=Can+I%3F#fragment');
   assert.match(yesLinks.x, /^https:\/\/twitter\.com\/intent\/tweet\?/);
   assert.match(yesLinks.facebook, /^https:\/\/www\.facebook\.com\/sharer\/sharer\.php\?u=/);
   assert.match(yesLinks.linkedIn, /^https:\/\/www\.linkedin\.com\/sharing\/share-offsite\/\?url=/);
@@ -43,6 +43,6 @@ test('buildSocialShareLinks returns encoded provider URLs', () => {
 
   const noLinks = buildSocialShareLinks(baseHref, 'Can I?', 'no');
 
-  assert.equal(noLinks.url, 'https://example.test/?answer=no&request=Can+I%3F#fragment');
+  assert.equal(noLinks.url, 'https://example.test/no?request=Can+I%3F#fragment');
   assert.match(noLinks.email, /^mailto:\?subject=YorNaaS(%20|\+)link&body=/);
 });

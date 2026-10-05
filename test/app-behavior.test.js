@@ -3,7 +3,6 @@ import { test } from 'node:test';
 import {
   autoplayRequest,
   copyShareLink,
-  readAnswerParam,
   readRequestParam,
   REQUEST_TIMEOUT_MS,
   submitAnswerRequest,
@@ -25,13 +24,6 @@ class MockAbortController {
 test('readRequestParam returns the request query value', () => {
   assert.equal(readRequestParam('?request=Can+I%3F'), 'Can I?');
   assert.equal(readRequestParam(''), null);
-});
-
-test('readAnswerParam returns yes or no from the query string', () => {
-  assert.equal(readAnswerParam('?answer=yes'), 'yes');
-  assert.equal(readAnswerParam('?answer=no'), 'no');
-  assert.equal(readAnswerParam('?answer=maybe'), 'yes');
-  assert.equal(readAnswerParam(''), 'yes');
 });
 
 test('submitAnswerRequest shows the yes response on success', async () => {
@@ -252,10 +244,9 @@ test('submitAnswerRequest skips stale responses when the request is no longer cu
 });
 
 test('readRequestParam supports autoplay entry from shared links', () => {
-  const requestParam = readRequestParam('?request=Can+I+have+a+pony%3F&answer=no');
+  const requestParam = readRequestParam('?request=Can+I+have+a+pony%3F');
 
   assert.equal(requestParam, 'Can I have a pony?');
-  assert.equal(readAnswerParam('?request=Can+I+have+a+pony%3F&answer=no'), 'no');
 });
 
 test('copyShareLink reports success when clipboard write succeeds', async () => {
@@ -266,7 +257,7 @@ test('copyShareLink reports success when clipboard write succeeds', async () => 
   };
 
   await copyShareLink({
-    text: 'https://example.test/?answer=yes&request=hi',
+    text: 'https://example.test/yes?request=hi',
     writeText: async (text) => {
       localThis.copiedText = text;
     },
@@ -278,7 +269,7 @@ test('copyShareLink reports success when clipboard write succeeds', async () => 
     }
   });
 
-  assert.equal(localThis.copiedText, 'https://example.test/?answer=yes&request=hi');
+  assert.equal(localThis.copiedText, 'https://example.test/yes?request=hi');
   assert.equal(localThis.success, true);
   assert.equal(localThis.failed, false);
 });
@@ -290,7 +281,7 @@ test('copyShareLink reports failure when clipboard write throws', async () => {
   };
 
   await copyShareLink({
-    text: 'https://example.test/?answer=yes&request=hi',
+    text: 'https://example.test/yes?request=hi',
     writeText: async () => {
       throw new Error('denied');
     },
@@ -337,5 +328,39 @@ test('autoplayRequest types each character, notifies input, and submits', async 
   assert.equal(localThis.value, 'No?');
   assert.equal(localThis.inputEvents, 3);
   assert.deepEqual(localThis.waits, [TYPE_DELAY_MS, TYPE_DELAY_MS, TYPE_DELAY_MS]);
+  assert.equal(localThis.submitted, true);
+});
+
+test('autoplayRequest skips animation for long shared requests', async () => {
+  const localThis = {
+    value: '',
+    inputEvents: 0,
+    submitted: false,
+    waits: []
+  };
+  const text = 'a'.repeat(101);
+
+  await autoplayRequest({
+    text,
+    clearInput: () => {
+      localThis.value = '';
+    },
+    appendChar: (value) => {
+      localThis.value += value;
+    },
+    notifyInput: () => {
+      localThis.inputEvents += 1;
+    },
+    submitForm: () => {
+      localThis.submitted = true;
+    },
+    wait: async (delayMs) => {
+      localThis.waits.push(delayMs);
+    }
+  });
+
+  assert.equal(localThis.value, text);
+  assert.equal(localThis.inputEvents, 1);
+  assert.deepEqual(localThis.waits, []);
   assert.equal(localThis.submitted, true);
 });

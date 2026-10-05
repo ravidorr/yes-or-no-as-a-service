@@ -28,8 +28,8 @@ npm install -g @ravidor/yornaas
 Or clone and run locally:
 
 ```sh
-git clone https://github.com/ravidorr/yor-naas-as-a-service.git
-cd yor-naas-as-a-service
+git clone https://github.com/ravidorr/yes-or-no-as-a-service.git
+cd yes-or-no-as-a-service
 npm install
 ```
 
@@ -41,9 +41,12 @@ npm start
 
 The API listens on `http://localhost:3000` by default.
 
-The UI is available at `http://localhost:3000`.
-Use `?request=` and optional `?answer=yes|no` to open a shareable YorNaaS flow
-that types and submits the request automatically.
+The yes UI is at `http://localhost:3000/yes` and the no UI is at
+`http://localhost:3000/no`. The root path returns `404` with the route hint.
+Use `?request=` on either page to open a shareable YorNaaS flow that types and
+submits the request automatically. Long shared requests are entered immediately
+instead of being animated character by character. Legacy root share URLs redirect
+to the matching page, defaulting to `/no` when no answer is specified.
 
 Health check:
 
@@ -74,8 +77,8 @@ Custom HTTP metrics:
 - `yornaas_http_requests_in_flight{route,method}`
 
 Route labels are normalized to `version`, `health`, `metrics`, `api_yes`,
-`api_no`, or `not_found`. Scrape traffic to `/metrics` is not counted in the
-custom HTTP metrics.
+`api_no`, `web_yes`, `web_no`, or `not_found`. Scrape traffic to `/metrics` is
+not counted in the custom HTTP metrics.
 
 Standard Node.js process and runtime metrics (CPU, memory, event loop, GC) are
 also included.
@@ -139,6 +142,13 @@ Build the image locally:
 ```sh
 docker build -t yornaas .
 docker run --rm -p 3000:3000 yornaas
+```
+
+Pull the published release image from GHCR:
+
+```sh
+docker pull ghcr.io/ravidorr/yes-or-no-as-a-service:latest
+docker run --rm -p 3000:3000 ghcr.io/ravidorr/yes-or-no-as-a-service:latest
 ```
 
 Verify the health check:

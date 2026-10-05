@@ -250,17 +250,45 @@ test('serves the OpenAPI specification', async () => {
   assert.match(document, /^  description: Unmatched request paths return `404 text\/plain` with a hint until throttled, then `429 text\/plain` with the same hint\.$/m);
 });
 
-test('serves the UI at root', async () => {
+test('returns 404 hint for GET /', async () => {
   const response = await fetch(`${baseUrl}/`);
+
+  assert.equal(response.status, 404);
+  assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8');
+  assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+});
+
+test('redirects legacy root share links to the matching answer page', async () => {
+  const noResponse = await fetch(`${baseUrl}/?answer=no&request=Can%20I%3F`, {
+    redirect: 'manual'
+  });
+  const yesResponse = await fetch(`${baseUrl}/?answer=yes&request=Can%20I%3F`, {
+    redirect: 'manual'
+  });
+  const defaultResponse = await fetch(`${baseUrl}/?request=Can%20I%3F`, {
+    redirect: 'manual'
+  });
+
+  assert.equal(noResponse.status, 308);
+  assert.equal(noResponse.headers.get('location'), '/no?request=Can+I%3F');
+  assert.equal(yesResponse.status, 308);
+  assert.equal(yesResponse.headers.get('location'), '/yes?request=Can+I%3F');
+  assert.equal(defaultResponse.status, 308);
+  assert.equal(defaultResponse.headers.get('location'), '/no?request=Can+I%3F');
+});
+
+test('serves the yes UI at /yes', async () => {
+  const response = await fetch(`${baseUrl}/yes`);
   const body = await response.text();
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type'), /^text\/html/);
-  assert.match(body, /<title>YorNaaS<\/title>/);
-  assert.match(body, /<h1 id="title">YorNaaS - Yes or No as a Service<\/h1>/);
+  assert.match(body, /<title>YorNaaS - Yes<\/title>/);
+  assert.match(body, /<body data-answer="yes">/);
+  assert.match(body, /<h1 id="title">YorNaaS - Yes as a Service<\/h1>/);
   assert.match(body, /id="yornaas-form"/);
   assert.match(body, /What do you want to ask YorNaaS\?/);
-  assert.match(body, />Ask YorNaaS<\/button>/);
+  assert.match(body, />Ask for Yes!<\/button>/);
   assert.match(body, /id="share-link"/);
   assert.match(body, /id="copy-url-button"/);
   assert.match(body, />Copy link<\/button>/);
@@ -279,8 +307,44 @@ test('serves the UI at root', async () => {
   assert.match(body, /aria-label="Share on WhatsApp"/);
   assert.match(body, />Share link<\/p>/);
   assert.match(body, /All done\. Share the link below\./);
-  assert.match(body, /Opening this link shows the question, answer mode, and the YorNaaS reply\./);
+  assert.match(body, /Opening this link shows the question and the Yes! reply\./);
   assert.match(body, /type="module" src="\/app\.js"/);
+  assert.doesNotMatch(body, /type="radio"/);
+});
+
+test('serves the no UI at /no', async () => {
+  const response = await fetch(`${baseUrl}/no`);
+  const body = await response.text();
+
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type'), /^text\/html/);
+  assert.match(body, /<title>YorNaaS - No<\/title>/);
+  assert.match(body, /<body data-answer="no">/);
+  assert.match(body, /<h1 id="title">YorNaaS - No as a Service<\/h1>/);
+  assert.match(body, /id="yornaas-form"/);
+  assert.match(body, /What do you want to ask YorNaaS\?/);
+  assert.match(body, />Ask for No!<\/button>/);
+  assert.match(body, /id="share-link"/);
+  assert.match(body, /id="copy-url-button"/);
+  assert.match(body, />Copy link<\/button>/);
+  assert.match(body, /id="preview-link-button"/);
+  assert.match(body, />Preview link<\/button>/);
+  assert.match(body, /id="share-status"/);
+  assert.match(body, /id="share-x-link"/);
+  assert.match(body, /aria-label="Share on X"/);
+  assert.match(body, /id="share-facebook-link"/);
+  assert.match(body, /aria-label="Share on Facebook"/);
+  assert.match(body, /id="share-linkedin-link"/);
+  assert.match(body, /aria-label="Share on LinkedIn"/);
+  assert.match(body, /id="share-email-link"/);
+  assert.match(body, /aria-label="Share by email"/);
+  assert.match(body, /id="share-whatsapp-link"/);
+  assert.match(body, /aria-label="Share on WhatsApp"/);
+  assert.match(body, />Share link<\/p>/);
+  assert.match(body, /All done\. Share the link below\./);
+  assert.match(body, /Opening this link shows the question and the No! reply\./);
+  assert.match(body, /type="module" src="\/app\.js"/);
+  assert.doesNotMatch(body, /type="radio"/);
 });
 
 test('createApp applies trust proxy when configured', () => {

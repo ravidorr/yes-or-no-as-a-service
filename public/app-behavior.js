@@ -1,13 +1,9 @@
 export const REQUEST_TIMEOUT_MS = 8000;
 export const TYPE_DELAY_MS = 45;
+export const MAX_AUTOPLAY_ANIMATION_LENGTH = 100;
 
 export function readRequestParam(search) {
   return new URLSearchParams(search).get('request');
-}
-
-export function readAnswerParam(search) {
-  const answer = new URLSearchParams(search).get('answer');
-  return answer === 'yes' || answer === 'no' ? answer : 'yes';
 }
 
 export async function submitAnswerRequest({
@@ -93,9 +89,17 @@ export async function autoplayRequest({
   notifyInput,
   submitForm,
   wait,
-  delayMs = TYPE_DELAY_MS
+  delayMs = TYPE_DELAY_MS,
+  maxAnimationLength = MAX_AUTOPLAY_ANIMATION_LENGTH
 }) {
   clearInput();
+
+  if (text.length > maxAnimationLength) {
+    appendChar(text);
+    notifyInput();
+    submitForm();
+    return;
+  }
 
   for (const char of text) {
     appendChar(char);
