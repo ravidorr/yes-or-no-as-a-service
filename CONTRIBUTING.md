@@ -1,6 +1,6 @@
-# Contributing to NaaS
+# Contributing to YorNaaS
 
-Thanks for helping improve No as a Service.
+Thanks for helping improve Yes or No as a Service.
 
 ## Prerequisites
 
@@ -10,12 +10,18 @@ Thanks for helping improve No as a Service.
 ## Setup
 
 ```sh
-git clone https://github.com/ravidorr/no-as-a-service.git
-cd no-as-a-service
+git clone https://github.com/ravidorr/yes-or-no-as-a-service.git
+cd yes-or-no-as-a-service
 npm install
 ```
 
 `npm install` also installs the Husky pre-commit hook.
+
+## Interfaces
+
+The [README](README.md) documents both answers across the `/api/yes` and
+`/api/no` API routes, the `yornaas yes` and `yornaas no` CLI subcommands, the
+`yes` and `no` MCP tools, and the `/yes` and `/no` web UI pages.
 
 ## Validation
 
@@ -67,20 +73,26 @@ Protected `main` requires:
 
 ## Releases
 
-When a version bump merges to `main`, GitHub Actions creates a GitHub Release and publishes `@ravidor/naas` to npm via [Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) (OIDC). No long-lived `NPM_TOKEN` secret is required.
+When a version bump merges to `main`, GitHub Actions creates a GitHub Release
+and publishes `@ravidor/yornaas` to npm via
+[Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) (OIDC). No
+long-lived `NPM_TOKEN` secret is required.
 
 Before the first automated publish, maintainers must:
 
 1. Publish once from a trusted machine with `npm login` and `npm publish --access public` (see README).
-2. On npm, open `@ravidor/naas` → **Settings** → **Trusted Publisher** → **GitHub Actions** and link `ravidorr/no-as-a-service` with workflow file `release.yml`.
+2. On npm, open `@ravidor/yornaas` → **Settings** → **Trusted Publisher** →
+   **GitHub Actions** and link `ravidorr/yes-or-no-as-a-service` with workflow
+   file `release.yml`.
 
 To smoke-test the publish tarball locally before a release:
 
 ```sh
 npm pack
-npm install -g ./ravidor-naas-*.tgz
-naas
-rm ravidor-naas-*.tgz
+npm install -g ./ravidor-yornaas-*.tgz
+yornaas yes
+yornaas no
+rm ravidor-yornaas-*.tgz
 ```
 
 Pack tarballs are gitignored (`*.tgz`); do not commit them.
@@ -111,4 +123,4 @@ Match the existing code in the file you are editing. Keep changes minimal and re
 
 ## Questions
 
-Open a [GitHub issue](https://github.com/ravidorr/no-as-a-service/issues) if something is unclear.
+Open a [GitHub issue](https://github.com/ravidorr/yes-or-no-as-a-service/issues) if something is unclear.

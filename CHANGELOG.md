@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.1 - 2026-10-05
+
+- Exempt the Yes and No web UI pages from the API rate-limit quota.
+- Redirect legacy root share links to the corresponding Yes or No page.
+- Submit long shared requests immediately rather than delaying on animation.
+- Correct contributor links, package names, commands, and GHCR instructions.
+
 ## 1.0.0 - 2026-10-05
 
 - Launch YorNaaS (Yes or No as a Service) combining yes and no answer routes.

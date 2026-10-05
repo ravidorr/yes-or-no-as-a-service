@@ -11,7 +11,9 @@ const KNOWN_ROUTES = new Map([
   ['/health', 'health'],
   ['/metrics', 'metrics'],
   ['/api/yes', 'api_yes'],
-  ['/api/no', 'api_no']
+  ['/api/no', 'api_no'],
+  ['/yes', 'web_yes'],
+  ['/no', 'web_no']
 ]);
 
 export function normalizeRoute(path) {

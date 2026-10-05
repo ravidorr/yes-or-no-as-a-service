@@ -1,7 +1,6 @@
 import {
   autoplayRequest,
   copyShareLink,
-  readAnswerParam,
   readRequestParam,
   submitAnswerRequest
 } from './app-behavior.js';
@@ -10,8 +9,6 @@ import { buildShareUrl, buildSocialShareLinks } from './share-utils.js';
 const form = document.querySelector('#yornaas-form');
 const input = document.querySelector('#request-text');
 const submitButton = document.querySelector('#submit-button');
-const answerYes = document.querySelector('#answer-yes');
-const answerNo = document.querySelector('#answer-no');
 const statusRow = document.querySelector('#status-row');
 const shareRow = document.querySelector('#share-row');
 const shareLink = document.querySelector('#share-link');
@@ -26,13 +23,10 @@ const shareStatus = document.querySelector('#share-status');
 const loading = document.querySelector('#loading');
 const status = document.querySelector('#status');
 const responseOutput = document.querySelector('#response');
+const answer = document.body.dataset.answer === 'no' ? 'no' : 'yes';
 let currentController = null;
 let isLoading = false;
 let requestToken = 0;
-
-function getSelectedAnswer() {
-  return answerNo.checked ? 'no' : 'yes';
-}
 
 function hasText() {
   return input.value.trim().length > 0;
@@ -105,7 +99,7 @@ function syncSocialLinks() {
     return;
   }
 
-  const links = buildSocialShareLinks(window.location.href, input.value, getSelectedAnswer());
+  const links = buildSocialShareLinks(window.location.href, input.value, answer);
 
   setSocialLink(shareXLink, links.x);
   setSocialLink(shareFacebookLink, links.facebook);
@@ -122,7 +116,7 @@ function syncShareLink() {
     return;
   }
 
-  shareLink.value = buildShareUrl(window.location.href, input.value, getSelectedAnswer());
+  shareLink.value = buildShareUrl(window.location.href, input.value, answer);
   syncSocialLinks();
   updateControls();
 }
@@ -163,13 +157,6 @@ input.addEventListener('input', () => {
   hideResult();
   setLoading(isLoading);
 });
-
-for (const control of [answerYes, answerNo]) {
-  control.addEventListener('change', () => {
-    hideResult();
-    syncShareLink();
-  });
-}
 
 copyUrlButton.addEventListener('click', async () => {
   if (!hasText()) {
@@ -218,7 +205,6 @@ form.addEventListener('submit', async (event) => {
   }
 
   const submittedText = input.value;
-  const answer = getSelectedAnswer();
   currentController?.abort();
   const token = requestToken + 1;
   requestToken = token;
@@ -249,13 +235,6 @@ form.addEventListener('submit', async (event) => {
 });
 
 const requestParam = readRequestParam(window.location.search);
-const answerParam = readAnswerParam(window.location.search);
-
-if (answerParam === 'no') {
-  answerNo.checked = true;
-} else {
-  answerYes.checked = true;
-}
 
 if (requestParam) {
   autoplayRequest({

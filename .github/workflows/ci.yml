@@ -141,6 +141,18 @@ jobs:
           [ "$metrics_type" = "text/plain; charset=utf-8; version=0.0.4" ]
           grep -q 'yornaas_http_requests_total' metrics.txt
 
+          yes_type="$(curl --fail --silent --show-error --max-time 5 --output yes.html --write-out '%{content_type}' http://127.0.0.1:3000/yes)"
+          [[ "$yes_type" == text/html* ]]
+          grep -q 'data-answer="yes"' yes.html
+
+          no_type="$(curl --fail --silent --show-error --max-time 5 --output no.html --write-out '%{content_type}' http://127.0.0.1:3000/no)"
+          [[ "$no_type" == text/html* ]]
+          grep -q 'data-answer="no"' no.html
+
+          root_status="$(curl --silent --show-error --max-time 5 --output root.txt --write-out '%{http_code}' http://127.0.0.1:3000/)"
+          [ "$root_status" = "404" ]
+          grep -q 'Use /api/yes or /api/no' root.txt
+
           unknown_status="$(curl --silent --show-error --max-time 5 --output unknown.txt --write-out '%{http_code}' http://127.0.0.1:3000/unknown-path)"
           [ "$unknown_status" = "404" ]
           grep -q 'Use /api/yes or /api/no' unknown.txt

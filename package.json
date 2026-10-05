@@ -1,18 +1,18 @@
 {
   "name": "@ravidor/yornaas",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Yes or No as a Service: call /api/yes or /api/no for Yes! or No!",
   "license": "MIT",
   "type": "module",
   "main": "src/server.js",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ravidorr/yor-naas-as-a-service.git"
+    "url": "git+https://github.com/ravidorr/yes-or-no-as-a-service.git"
   },
   "bugs": {
-    "url": "https://github.com/ravidorr/yor-naas-as-a-service/issues"
+    "url": "https://github.com/ravidorr/yes-or-no-as-a-service/issues"
   },
-  "homepage": "https://github.com/ravidorr/yor-naas-as-a-service#readme",
+  "homepage": "https://github.com/ravidorr/yes-or-no-as-a-service#readme",
   "keywords": [
     "yornaas",
     "yaas",

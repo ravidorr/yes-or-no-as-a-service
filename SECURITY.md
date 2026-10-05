@@ -13,7 +13,7 @@ Security fixes are applied to the latest release on `main`.
 
 Please do not open a public GitHub issue for security reports.
 
-Report vulnerabilities privately through [GitHub Security Advisories](https://github.com/ravidorr/yor-naas-as-a-service/security/advisories/new) or by opening a private security contact through GitHub if that option is unavailable.
+Report vulnerabilities privately through [GitHub Security Advisories](https://github.com/ravidorr/yes-or-no-as-a-service/security/advisories/new) or by opening a private security contact through GitHub if that option is unavailable.
 
 Include:
 

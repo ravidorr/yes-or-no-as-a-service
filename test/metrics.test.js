@@ -28,6 +28,8 @@ test('normalizeRoute maps known service paths and collapses everything else', ()
   assert.equal(normalizeRoute('/metrics'), 'metrics');
   assert.equal(normalizeRoute('/api/yes'), 'api_yes');
   assert.equal(normalizeRoute('/api/no'), 'api_no');
+  assert.equal(normalizeRoute('/yes'), 'web_yes');
+  assert.equal(normalizeRoute('/no'), 'web_no');
   assert.equal(normalizeRoute('/anything'), 'not_found');
   assert.equal(normalizeRoute('/health/anything'), 'not_found');
 });

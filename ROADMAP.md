@@ -1,8 +1,8 @@
 # YorNaaS roadmap
 
-Living plan for [yor-naas-as-a-service](https://github.com/ravidorr/yor-naas-as-a-service). Update this file when scope or priorities change.
+Living plan for [yes-or-no-as-a-service](https://github.com/ravidorr/yes-or-no-as-a-service). Update this file when scope or priorities change.
 
-**Current release:** [`@ravidor/yornaas`](https://www.npmjs.com/package/@ravidor/yornaas) — version on `main` lives in [`package.json`](./package.json); tags and notes on [GitHub Releases](https://github.com/ravidorr/yor-naas-as-a-service/releases).
+**Current release:** [`@ravidor/yornaas`](https://www.npmjs.com/package/@ravidor/yornaas) — version on `main` lives in [`package.json`](./package.json); tags and notes on [GitHub Releases](https://github.com/ravidorr/yes-or-no-as-a-service/releases).
 
 ## Decisions (locked in)
 
@@ -12,7 +12,7 @@ Living plan for [yor-naas-as-a-service](https://github.com/ravidorr/yor-naas-as-
 | CI publish | [Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) via `release.yml` (no `NPM_TOKEN`) |
 | Required checks on `main` | `test`, `release-notes`, `lint`, `smoke` |
 | Rate limit | HTTP `429`, body route hint (plain text) |
-| Container registry | [GHCR](https://ghcr.io) `ghcr.io/ravidorr/yor-naas-as-a-service` on release |
+| Container registry | [GHCR](https://ghcr.io) `ghcr.io/ravidorr/yes-or-no-as-a-service` on release |
 
 ## Done
 
@@ -24,7 +24,7 @@ Living plan for [yor-naas-as-a-service](https://github.com/ravidorr/yor-naas-as-
 - [x] Auto lockfile sync from staged `package.json`
 - [x] Dependabot (npm + GitHub Actions)
 - [x] GitHub Releases on version bump to `main`
-- [x] npm publish `@ravidor/yornaas` + Trusted Publisher for `ravidorr/yor-naas-as-a-service` / `release.yml`
+- [x] npm publish `@ravidor/yornaas` + Trusted Publisher for `ravidorr/yes-or-no-as-a-service` / `release.yml`
 - [x] README install and contributor guidance
 - [x] Phase 3a: Health endpoint (`GET /health` JSON status and version)
 - [x] Phase 3b: OpenAPI specification at `GET /openapi.yaml`
@@ -33,7 +33,7 @@ Living plan for [yor-naas-as-a-service](https://github.com/ravidorr/yor-naas-as-
 - [x] Graceful shutdown (SIGTERM/SIGINT) for containers with draining `/health`
 - [x] `GET /version` plain-text package version endpoint
 - [x] E2E smoke in CI (`curl /api/yes`, `/api/no`, `/health`, `/version`, `/metrics`, 404 smoke)
-- [x] GHCR publish on release (`ghcr.io/ravidorr/yor-naas-as-a-service`)
+- [x] GHCR publish on release (`ghcr.io/ravidorr/yes-or-no-as-a-service`)
 - [x] YorNaaS 1.0: dual `/api/yes` and `/api/no` routes, CLI subcommands, MCP yes/no tools
 - [x] Prometheus `/metrics` with HTTP and Node.js runtime metrics
 

@@ -1,8 +1,8 @@
 export function buildShareUrl(baseHref, text, answer = 'yes') {
   const url = new URL(baseHref);
 
+  url.pathname = `/${answer}`;
   url.search = '';
-  url.searchParams.set('answer', answer);
   url.searchParams.set('request', text);
   return url.href;
 }

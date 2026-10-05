@@ -68,6 +68,26 @@ export function createApp({
     res.status(200).send(await metrics.metrics());
   });
 
+  app.get('/', (req, res, next) => {
+    if (typeof req.query.request !== 'string') {
+      next();
+      return;
+    }
+
+    const answer = req.query.answer === 'yes' ? 'yes' : 'no';
+    const query = new URLSearchParams({ request: req.query.request });
+
+    res.redirect(308, `/${answer}?${query}`);
+  });
+
+  app.get('/yes', (_req, res) => {
+    res.sendFile(resolve(publicPath, 'yes.html'));
+  });
+
+  app.get('/no', (_req, res) => {
+    res.sendFile(resolve(publicPath, 'no.html'));
+  });
+
   app.use(createRateLimitMiddleware(resolvedRateLimitConfig));
 
   app.all('/api/yes', (req, res) => {

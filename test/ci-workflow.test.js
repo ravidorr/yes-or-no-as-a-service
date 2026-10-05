@@ -40,6 +40,9 @@ test('CI smoke job starts the app and checks public endpoint contracts', () => {
   assert.match(smokeJob, /--max-time 5 --output health\.json/);
   assert.match(smokeJob, /--max-time 5 --output version\.txt/);
   assert.match(smokeJob, /--max-time 5 --output metrics\.txt/);
+  assert.match(smokeJob, /--max-time 5 --output yes\.html/);
+  assert.match(smokeJob, /--max-time 5 --output no\.html/);
+  assert.match(smokeJob, /--max-time 5 --output root\.txt/);
   assert.match(smokeJob, /--max-time 5 --output unknown\.txt/);
   assert.match(smokeJob, /cat server\.log/);
   assert.match(smokeJob, /http:\/\/127\.0\.0\.1:3000\/api\/yes/);
@@ -47,6 +50,9 @@ test('CI smoke job starts the app and checks public endpoint contracts', () => {
   assert.match(smokeJob, /http:\/\/127\.0\.0\.1:3000\/health/);
   assert.match(smokeJob, /http:\/\/127\.0\.0\.1:3000\/version/);
   assert.match(smokeJob, /http:\/\/127\.0\.0\.1:3000\/metrics/);
+  assert.match(smokeJob, /http:\/\/127\.0\.0\.1:3000\/yes/);
+  assert.match(smokeJob, /http:\/\/127\.0\.0\.1:3000\/no/);
+  assert.match(smokeJob, /http:\/\/127\.0\.0\.1:3000\//);
   assert.match(smokeJob, /http:\/\/127\.0\.0\.1:3000\/unknown-path/);
   assert.match(smokeJob, /\[ "\$\(cat api-yes\.txt\)" = "Yes!" \]/);
   assert.match(smokeJob, /\[ "\$\(cat api-no\.txt\)" = "No!" \]/);
@@ -55,6 +61,11 @@ test('CI smoke job starts the app and checks public endpoint contracts', () => {
   assert.match(smokeJob, /\[ "\$\(cat version\.txt\)" = "\$expected_version" \]/);
   assert.match(smokeJob, /\[ "\$metrics_type" = "text\/plain; charset=utf-8; version=0\.0\.4" \]/);
   assert.match(smokeJob, /grep -q 'yornaas_http_requests_total' metrics\.txt/);
+  assert.match(smokeJob, /grep -q 'data-answer="yes"' yes\.html/);
+  assert.match(smokeJob, /grep -q 'data-answer="no"' no\.html/);
+  assert.match(smokeJob, /root_status="\$\(curl --silent --show-error --max-time 5 --output root\.txt --write-out '%\{http_code\}' http:\/\/127\.0\.0\.1:3000\/\)"/);
+  assert.match(smokeJob, /\[ "\$root_status" = "404" \]/);
+  assert.match(smokeJob, /grep -q 'Use \/api\/yes or \/api\/no' root\.txt/);
   assert.match(smokeJob, /unknown_status="\$\(curl --silent --show-error --max-time 5 --output unknown\.txt --write-out '%\{http_code\}' http:\/\/127\.0\.0\.1:3000\/unknown-path\)"/);
   assert.match(smokeJob, /\[ "\$unknown_status" = "404" \]/);
 });

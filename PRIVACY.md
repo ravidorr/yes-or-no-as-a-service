@@ -42,4 +42,4 @@ If this policy changes, the update will be committed to this repository.
 
 ## Contact
 
-Questions about privacy can be raised in [GitHub issues](https://github.com/ravidorr/yor-naas-as-a-service/issues).
+Questions about privacy can be raised in [GitHub issues](https://github.com/ravidorr/yes-or-no-as-a-service/issues).

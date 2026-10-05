@@ -2,7 +2,7 @@
 
 ## Getting help
 
-Support for YorNaaS is provided through [GitHub issues](https://github.com/ravidorr/yor-naas-as-a-service/issues).
+Support for YorNaaS is provided through [GitHub issues](https://github.com/ravidorr/yes-or-no-as-a-service/issues).
 
 Use issues for:
 
