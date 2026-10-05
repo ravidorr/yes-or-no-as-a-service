@@ -198,15 +198,15 @@ jobs:
 
           yes_type="$(curl --fail --silent --show-error --max-time 5 --output yes.html --write-out '%{content_type}' http://127.0.0.1:3000/yes)"
           [[ "$yes_type" == text/html* ]]
-          grep -q 'data-answer="yes"' yes.html
+          grep -q 'data-mode="yes"' yes.html
 
           no_type="$(curl --fail --silent --show-error --max-time 5 --output no.html --write-out '%{content_type}' http://127.0.0.1:3000/no)"
           [[ "$no_type" == text/html* ]]
-          grep -q 'data-answer="no"' no.html
+          grep -q 'data-mode="no"' no.html
 
           random_type="$(curl --fail --silent --show-error --max-time 5 --output random.html --write-out '%{content_type}' http://127.0.0.1:3000/random)"
           [[ "$random_type" == text/html* ]]
-          grep -q 'data-answer="random"' random.html
+          grep -q 'data-mode="random"' random.html
 
           root_status="$(curl --silent --show-error --max-time 5 --output root.txt --write-out '%{http_code}' http://127.0.0.1:3000/)"
           [ "$root_status" = "404" ]

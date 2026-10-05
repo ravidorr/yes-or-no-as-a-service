@@ -1,4 +1,5 @@
 import express from 'express';
+import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import packageInfo from '../package.json' with { type: 'json' };
@@ -9,7 +10,6 @@ import {
   NO_RESPONSE,
   selectRandomAnswer,
   SERVICE_NAME,
-  UNKNOWN_ROUTE_HINT,
   YES_RESPONSE
 } from './responses.js';
 import { createRateLimitMiddleware } from './rate-limit.js';
@@ -31,6 +31,12 @@ export function createApp({
 } = {}) {
   const app = express();
   const publicPath = resolve(__dirname, '../public');
+  const pageTemplate = readFileSync(resolve(publicPath, 'index.html'), 'utf8');
+  const notFoundTemplate = readFileSync(resolve(publicPath, '404.html'), 'utf8');
+
+  function renderPage(mode, res) {
+    res.status(200).type('html').send(pageTemplate.replaceAll('__PAGE_MODE__', mode));
+  }
   const resolvedRateLimitConfig = rateLimitConfig
     ? validateRateLimitConfig(rateLimitConfig)
     : parseRateLimitConfig();
@@ -40,7 +46,7 @@ export function createApp({
   }
 
   app.use(metrics.middleware);
-  app.use(express.static(publicPath));
+  app.use(express.static(publicPath, { index: false }));
 
   app.all('/version', (req, res, next) => {
     if (req.method !== 'GET') {
@@ -92,15 +98,15 @@ export function createApp({
   });
 
   app.get('/yes', (_req, res) => {
-    res.sendFile(resolve(publicPath, 'yes.html'));
+    renderPage('yes', res);
   });
 
   app.get('/no', (_req, res) => {
-    res.sendFile(resolve(publicPath, 'no.html'));
+    renderPage('no', res);
   });
 
   app.get('/random', (_req, res) => {
-    res.sendFile(resolve(publicPath, 'random.html'));
+    renderPage('random', res);
   });
 
   app.use(createRateLimitMiddleware(resolvedRateLimitConfig));
@@ -122,7 +128,7 @@ export function createApp({
   });
 
   app.use((req, res) => {
-    res.status(404).type('text/plain').send(UNKNOWN_ROUTE_HINT);
+    res.status(404).type('html').send(notFoundTemplate);
   });
 
   return app;

@@ -4,38 +4,46 @@ import {
   readRequestParam,
   submitAnswerRequest
 } from './app-behavior.js';
+import { applyPageCopy } from './page-config.js';
 import { buildShareUrl, buildSocialShareLinks } from './share-utils.js';
+import { initializeThemeToggle } from './theme.js';
 
-const form = document.querySelector('#yesornoaas-form');
-const input = document.querySelector('#request-text');
-const submitButton = document.querySelector('#submit-button');
-const statusRow = document.querySelector('#status-row');
-const shareRow = document.querySelector('#share-row');
-const shareLink = document.querySelector('#share-link');
-const copyUrlButton = document.querySelector('#copy-url-button');
-const previewLinkButton = document.querySelector('#preview-link-button');
+applyPageCopy(document.body.dataset.mode);
+
+const ERROR_COPY = {
+  timeout: {
+    title: 'Timed out waiting for an answer.',
+    body: 'YESorNOaaS did not respond in time. Check your connection and ask again. Your question is kept.'
+  },
+  unavailable: {
+    title: 'YESorNOaaS is unavailable.',
+    body: 'Check your connection and ask again. Your question is kept.'
+  }
+};
+
+const form = document.querySelector('#ask-form');
+const body = document.querySelector('.body');
+const input = document.querySelector('#request');
+const submitButton = document.querySelector('#submit');
+const empty = document.querySelector('#empty');
+const status = document.querySelector('#status');
+const errorSlot = document.querySelector('#error');
+const errorTitle = document.querySelector('.error-title');
+const errorText = document.querySelector('.error-text');
+const answerElement = document.querySelector('#answer');
+const answerText = document.querySelector('#answer-text');
+const share = document.querySelector('#share');
+const shareUrl = document.querySelector('#share-url');
+const copyButton = document.querySelector('#copy');
+const previewButton = document.querySelector('#preview');
 const shareXLink = document.querySelector('#share-x-link');
 const shareFacebookLink = document.querySelector('#share-facebook-link');
 const shareLinkedInLink = document.querySelector('#share-linkedin-link');
 const shareEmailLink = document.querySelector('#share-email-link');
 const shareWhatsAppLink = document.querySelector('#share-whatsapp-link');
 const shareStatus = document.querySelector('#share-status');
-const loading = document.querySelector('#loading');
-const status = document.querySelector('#status');
-const responseOutput = document.querySelector('#response');
-function resolveAnswerMode(datasetAnswer) {
-  if (datasetAnswer === 'no') {
-    return 'no';
-  }
-
-  if (datasetAnswer === 'random') {
-    return 'random';
-  }
-
-  return 'yes';
-}
-
-const answer = resolveAnswerMode(document.body.dataset.answer);
+const replayLinks = document.querySelectorAll('.replays a');
+const answer = document.body.dataset.mode;
 let currentController = null;
 let isLoading = false;
 let requestToken = 0;
@@ -44,36 +52,34 @@ function hasText() {
   return input.value.trim().length > 0;
 }
 
-function updateStatusVisibility() {
-  statusRow.hidden = loading.hidden && status.textContent.length === 0;
+function setSlot(state) {
+  empty.hidden = state !== 'empty';
+  status.hidden = state !== 'loading';
+  errorSlot.hidden = state !== 'error';
+  answerElement.hidden = state !== 'answer';
+  body.dataset.state = state === 'answer' ? 'answered' : 'initial';
 }
 
 function updateControls() {
   const hasRequest = hasText();
-  const shareEnabled = !isLoading && hasRequest && !shareRow.hidden;
+  const shareEnabled = !isLoading && hasRequest && !share.hidden;
 
   submitButton.disabled = isLoading || !hasRequest;
-  copyUrlButton.disabled = !shareEnabled;
-  previewLinkButton.disabled = !shareEnabled;
+  copyButton.disabled = !shareEnabled;
+  previewButton.disabled = !shareEnabled;
 }
 
 function setLoading(loadingState) {
-  loading.hidden = !loadingState;
+  isLoading = loadingState;
   form.setAttribute('aria-busy', String(loadingState));
+
+  if (loadingState) {
+    setSlot('loading');
+  } else if (answerElement.hidden && errorSlot.hidden) {
+    setSlot('empty');
+  }
+
   updateControls();
-  updateStatusVisibility();
-}
-
-function clearStatus() {
-  status.textContent = '';
-  status.classList.remove('error');
-  updateStatusVisibility();
-}
-
-function showError(message) {
-  status.textContent = message;
-  status.classList.add('error');
-  updateStatusVisibility();
 }
 
 function clearShareStatus() {
@@ -92,8 +98,21 @@ function showShareError(message) {
 }
 
 function setSocialLink(element, href) {
-  element.href = href;
+  element.href = href || '#';
   element.setAttribute('aria-disabled', href ? 'false' : 'true');
+}
+
+function syncReplayLinks() {
+  for (const link of replayLinks) {
+    const replayMode = link.dataset.replayMode;
+
+    if (!hasText()) {
+      link.href = `/${replayMode}`;
+      continue;
+    }
+
+    link.href = buildShareUrl(`${window.location.origin}/${replayMode}`, input.value, replayMode);
+  }
 }
 
 function syncSocialLinks() {
@@ -122,29 +141,41 @@ function syncSocialLinks() {
 
 function syncShareLink() {
   if (!hasText()) {
-    shareLink.value = '';
+    shareUrl.value = '';
     syncSocialLinks();
+    syncReplayLinks();
     updateControls();
     return;
   }
 
-  shareLink.value = buildShareUrl(window.location.href, input.value, answer);
+  shareUrl.value = buildShareUrl(window.location.href, input.value, answer);
   syncSocialLinks();
+  syncReplayLinks();
   updateControls();
 }
 
 function hideResult() {
-  responseOutput.textContent = '';
-  responseOutput.hidden = true;
-  shareRow.hidden = true;
+  answerText.textContent = '';
+  share.hidden = true;
   clearShareStatus();
+  setSlot('empty');
   syncShareLink();
 }
 
+function showError(kind) {
+  const copy = ERROR_COPY[kind];
+  errorTitle.textContent = copy.title;
+  errorText.textContent = copy.body;
+  share.hidden = true;
+  setSlot('error');
+  updateControls();
+}
+
 function showResult(text) {
-  responseOutput.textContent = text;
-  responseOutput.hidden = false;
-  shareRow.hidden = false;
+  answerElement.dataset.answer = text === 'No!' ? 'no' : 'yes';
+  answerText.textContent = text;
+  share.hidden = false;
+  setSlot('answer');
   syncShareLink();
 }
 
@@ -154,6 +185,15 @@ function wait(ms) {
   });
 }
 
+initializeThemeToggle();
+
+function selectShareUrl() {
+  shareUrl.select();
+}
+
+shareUrl.addEventListener('focus', selectShareUrl);
+shareUrl.addEventListener('click', selectShareUrl);
+
 input.addEventListener('input', () => {
   if (isLoading) {
     requestToken += 1;
@@ -162,37 +202,33 @@ input.addEventListener('input', () => {
     isLoading = false;
   }
 
-  if (!hasText()) {
-    clearStatus();
-  }
-
   hideResult();
   setLoading(isLoading);
 });
 
-copyUrlButton.addEventListener('click', async () => {
+copyButton.addEventListener('click', async () => {
   if (!hasText()) {
     return;
   }
 
   await copyShareLink({
-    text: shareLink.value,
+    text: shareUrl.value,
     writeText: (text) => navigator.clipboard.writeText(text),
     onSuccess: () => showShareStatus('Link copied.'),
     onError: () => {
-      shareLink.focus();
-      shareLink.select();
+      shareUrl.focus();
+      shareUrl.select();
       showShareError('Copy failed. Select the link manually.');
     }
   });
 });
 
-previewLinkButton.addEventListener('click', () => {
+previewButton.addEventListener('click', () => {
   if (!hasText()) {
     return;
   }
 
-  window.location.href = shareLink.value;
+  window.location.href = shareUrl.value;
 });
 
 for (const link of [
@@ -222,7 +258,6 @@ form.addEventListener('submit', async (event) => {
   requestToken = token;
   isLoading = true;
   setLoading(true);
-  clearStatus();
   hideResult();
 
   await submitAnswerRequest({
@@ -234,8 +269,8 @@ form.addEventListener('submit', async (event) => {
       currentController = controller;
     },
     onSuccess: showResult,
-    onTimeout: () => showError('YESorNOaaS timed out. Try again.'),
-    onUnavailable: () => showError('YESorNOaaS is unavailable. Try again.')
+    onTimeout: () => showError('timeout'),
+    onUnavailable: () => showError('unavailable')
   });
 
   if (token === requestToken) {
@@ -245,6 +280,9 @@ form.addEventListener('submit', async (event) => {
     setLoading(false);
   }
 });
+
+setSlot('empty');
+updateControls();
 
 const requestParam = readRequestParam(window.location.search);
 

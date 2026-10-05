@@ -4,7 +4,6 @@ import { resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { parse as parseYaml } from 'yaml';
 import packageInfo from '../package.json' with { type: 'json' };
-import { UNKNOWN_ROUTE_HINT } from '../src/responses.js';
 import { app, createApp } from '../src/server.js';
 
 const openApiDocument = parseYaml(readFileSync(resolve('public/openapi.yaml'), 'utf8'));
@@ -79,5 +78,6 @@ test('live endpoints match the OpenAPI response contracts', async () => {
 
   const unknownResponse = await fetch(`${baseUrl}/unknown-path`);
   assert.equal(unknownResponse.status, 404);
-  assert.equal(await unknownResponse.text(), UNKNOWN_ROUTE_HINT);
+  assert.match(unknownResponse.headers.get('content-type'), /^text\/html/);
+  assert.match(await unknownResponse.text(), /<body data-mode="404">/);
 });
