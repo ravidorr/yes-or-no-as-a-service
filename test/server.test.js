@@ -81,12 +81,12 @@ test('returns Prometheus metrics with runtime and HTTP families', async () => {
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type'), /^text\/plain; charset=utf-8; version=0\.0\.4$/);
   assert.match(body, /# HELP process_cpu_user_seconds_total/);
-  assert.match(body, /# HELP yornaas_http_requests_total/);
-  assert.match(body, /# HELP yornaas_http_request_duration_seconds/);
-  assert.match(body, /# HELP yornaas_http_requests_in_flight/);
-  assert.match(body, /yornaas_http_requests_total\{route="api_yes",method="GET",status_code="200"\}/);
-  assert.match(body, /yornaas_http_requests_total\{route="api_no",method="GET",status_code="200"\}/);
-  assert.doesNotMatch(body, /yornaas_http_requests_total\{route="metrics"/);
+  assert.match(body, /# HELP yesornoaas_http_requests_total/);
+  assert.match(body, /# HELP yesornoaas_http_request_duration_seconds/);
+  assert.match(body, /# HELP yesornoaas_http_requests_in_flight/);
+  assert.match(body, /yesornoaas_http_requests_total\{route="api_yes",method="GET",status_code="200"\}/);
+  assert.match(body, /yesornoaas_http_requests_total\{route="api_no",method="GET",status_code="200"\}/);
+  assert.doesNotMatch(body, /yesornoaas_http_requests_total\{route="metrics"/);
 });
 
 test('returns 404 hint for POST /metrics', async () => {
@@ -119,7 +119,7 @@ test('returns metrics while health is draining', async () => {
 
     assert.equal(healthResponse.status, 503);
     assert.equal(metricsResponse.status, 200);
-    assert.match(await metricsResponse.text(), /# HELP yornaas_http_requests_total/);
+    assert.match(await metricsResponse.text(), /# HELP yesornoaas_http_requests_total/);
   } finally {
     await new Promise((resolvePromise, reject) => {
       drainingServer.close((error) => (error ? reject(error) : resolvePromise()));
@@ -132,7 +132,7 @@ test('returns health status and version as JSON', async () => {
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type'), /^application\/json/);
-  assert.deepEqual(await response.json(), { status: 'YorNaaS', version: packageInfo.version });
+  assert.deepEqual(await response.json(), { status: 'YESorNOaaS', version: packageInfo.version });
 });
 
 test('returns the package version as plain text', async () => {
@@ -172,7 +172,7 @@ test('returns 503 for GET /health while shutting down', async () => {
 
     assert.equal(response.status, 503);
     assert.match(response.headers.get('content-type'), /^application\/json/);
-    assert.deepEqual(await response.json(), { status: 'YorNaaS', version: packageInfo.version });
+    assert.deepEqual(await response.json(), { status: 'YESorNOaaS', version: packageInfo.version });
   } finally {
     await new Promise((resolvePromise, reject) => {
       drainingServer.close((error) => (error ? reject(error) : resolvePromise()));
@@ -232,7 +232,7 @@ test('serves the OpenAPI specification', async () => {
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('content-type'), 'text/yaml; charset=utf-8');
   assert.match(document, /^openapi: 3\.1\.1$/m);
-  assert.match(document, /^  title: YorNaaS API$/m);
+  assert.match(document, /^  title: YESorNOaaS API$/m);
   assert.match(document, new RegExp(`^  version: ${packageInfo.version.replace(/\./g, '\\.')}$`, 'm'));
   assert.match(document, /^  \/:$/m);
   assert.match(document, /^        '308':$/m);
@@ -244,13 +244,15 @@ test('serves the OpenAPI specification', async () => {
   assert.match(document, /^  \/metrics:\n    get:\n      summary: Return Prometheus metrics for scraping\n      description: \|\n        Exposes HTTP service metrics and standard Node\.js runtime metrics in\n        Prometheus text format\. Intended for Prometheus scraping\. Exempt from\n        rate limiting\.\n      responses:\n        '200':\n          description: Prometheus metrics exposition format\n          content:\n            text\/plain:\n              schema:\n                type: string$/m);
   assert.match(document, /^  \/api\/yes:$/m);
   assert.match(document, /^  \/api\/no:$/m);
+  assert.match(document, /^  \/api\/random:$/m);
+  assert.match(document, /^    RandomResponse:$/m);
   assert.match(document, /^    HealthResponse:$/m);
   assert.match(document, /^        '503':$/m);
   assert.match(document, /^          description: Service is draining connections during shutdown$/m);
   assert.match(document, /^    YesResponse:$/m);
   assert.match(document, /^    NoResponse:$/m);
   assert.match(document, /^    ThrottledResponse:$/m);
-  assert.match(document, /^x-yornaas-unknown-routes:$/m);
+  assert.match(document, /^x-yesornoaas-unknown-routes:$/m);
   assert.match(document, /^  description: Unmatched request paths, except legacy root share redirects, return `404 text\/plain` with a hint until throttled, then `429 text\/plain` with the same hint\.$/m);
 });
 
@@ -277,6 +279,9 @@ test('redirects legacy root share links to the matching answer page', async () =
   const yesResponse = await fetch(`${baseUrl}/?answer=yes&request=Can%20I%3F`, {
     redirect: 'manual'
   });
+  const randomResponse = await fetch(`${baseUrl}/?answer=random&request=Can%20I%3F`, {
+    redirect: 'manual'
+  });
   const defaultResponse = await fetch(`${baseUrl}/?request=Can%20I%3F`, {
     redirect: 'manual'
   });
@@ -285,6 +290,8 @@ test('redirects legacy root share links to the matching answer page', async () =
   assert.equal(noResponse.headers.get('location'), '/no?request=Can+I%3F');
   assert.equal(yesResponse.status, 308);
   assert.equal(yesResponse.headers.get('location'), '/yes?request=Can+I%3F');
+  assert.equal(randomResponse.status, 308);
+  assert.equal(randomResponse.headers.get('location'), '/random?request=Can+I%3F');
   assert.equal(defaultResponse.status, 308);
   assert.equal(defaultResponse.headers.get('location'), '/no?request=Can+I%3F');
 });
@@ -295,11 +302,15 @@ test('serves the yes UI at /yes', async () => {
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type'), /^text\/html/);
-  assert.match(body, /<title>YorNaaS - Yes<\/title>/);
+  assert.match(body, /<title>YESorNOaaS - Yes<\/title>/);
   assert.match(body, /<body data-answer="yes">/);
-  assert.match(body, /<h1 id="title">YorNaaS - Yes as a Service<\/h1>/);
-  assert.match(body, /id="yornaas-form"/);
-  assert.match(body, /What do you want to ask YorNaaS\?/);
+  assert.match(body, /<h1 id="title">Ask a yes\/no question and get a Yes! response<\/h1>/);
+  assert.match(body, /aria-label="Other YESorNOaaS answer modes"/);
+  assert.match(body, /Get a &quot;No!&quot; replay/);
+  assert.match(body, /Get a random replay/);
+  assert.doesNotMatch(body, /Get a &quot;Yes!&quot; replay/);
+  assert.match(body, /id="yesornoaas-form"/);
+  assert.match(body, /Ask a yes\/no question/);
   assert.match(body, />Ask for Yes!<\/button>/);
   assert.match(body, /id="share-link"/);
   assert.match(body, /id="copy-url-button"/);
@@ -330,11 +341,15 @@ test('serves the no UI at /no', async () => {
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type'), /^text\/html/);
-  assert.match(body, /<title>YorNaaS - No<\/title>/);
+  assert.match(body, /<title>YESorNOaaS - No<\/title>/);
   assert.match(body, /<body data-answer="no">/);
-  assert.match(body, /<h1 id="title">YorNaaS - No as a Service<\/h1>/);
-  assert.match(body, /id="yornaas-form"/);
-  assert.match(body, /What do you want to ask YorNaaS\?/);
+  assert.match(body, /<h1 id="title">Ask a yes\/no question and get a No! response<\/h1>/);
+  assert.match(body, /aria-label="Other YESorNOaaS answer modes"/);
+  assert.match(body, /Get a &quot;Yes!&quot; replay/);
+  assert.match(body, /Get a random replay/);
+  assert.doesNotMatch(body, /Get a &quot;No!&quot; replay/);
+  assert.match(body, /id="yesornoaas-form"/);
+  assert.match(body, /Ask a yes\/no question/);
   assert.match(body, />Ask for No!<\/button>/);
   assert.match(body, /id="share-link"/);
   assert.match(body, /id="copy-url-button"/);
@@ -357,6 +372,25 @@ test('serves the no UI at /no', async () => {
   assert.match(body, /Opening this link shows the question and the No! reply\./);
   assert.match(body, /type="module" src="\/app\.js"/);
   assert.doesNotMatch(body, /type="radio"/);
+});
+
+test('serves the random UI at /random', async () => {
+  const response = await fetch(`${baseUrl}/random`);
+  const body = await response.text();
+
+  assert.equal(response.status, 200);
+  assert.match(response.headers.get('content-type'), /^text\/html/);
+  assert.match(body, /<title>YESorNOaaS - Random<\/title>/);
+  assert.match(body, /<body data-answer="random">/);
+  assert.match(body, /<h1 id="title">Ask a yes\/no question and get a random Yes! or No! response<\/h1>/);
+  assert.match(body, /aria-label="Other YESorNOaaS answer modes"/);
+  assert.match(body, /Get a &quot;Yes!&quot; replay/);
+  assert.match(body, /Get a &quot;No!&quot; replay/);
+  assert.doesNotMatch(body, /Get a random replay/);
+  assert.match(body, /Ask a yes\/no question/);
+  assert.match(body, />Ask for Random!<\/button>/);
+  assert.match(body, /Opening this link shows the question and a new random Yes! or No! reply\./);
+  assert.match(body, /type="module" src="\/app\.js"/);
 });
 
 test('createApp applies trust proxy when configured', () => {
@@ -411,6 +445,73 @@ test('returns No! for every documented /api/no method', async () => {
   }
 });
 
+test('returns Yes! from /api/random when the injected source selects yes', async () => {
+  const randomApp = createApp({ randomNumberSource: () => 0 });
+  const randomServer = randomApp.listen(0);
+
+  await new Promise((resolvePromise) => randomServer.once('listening', resolvePromise));
+
+  const { port } = randomServer.address();
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/api/random`);
+
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8');
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal(await response.text(), 'Yes!');
+  } finally {
+    await new Promise((resolvePromise, reject) => {
+      randomServer.close((error) => (error ? reject(error) : resolvePromise()));
+    });
+  }
+});
+
+test('returns No! from /api/random when the injected source selects no', async () => {
+  const randomApp = createApp({ randomNumberSource: () => 0.5 });
+  const randomServer = randomApp.listen(0);
+
+  await new Promise((resolvePromise) => randomServer.once('listening', resolvePromise));
+
+  const { port } = randomServer.address();
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/api/random`);
+
+    assert.equal(response.status, 200);
+    assert.equal(await response.text(), 'No!');
+  } finally {
+    await new Promise((resolvePromise, reject) => {
+      randomServer.close((error) => (error ? reject(error) : resolvePromise()));
+    });
+  }
+});
+
+test('returns a selected answer for every documented /api/random method', async () => {
+  const randomApp = createApp({ randomNumberSource: () => 0 });
+  const randomServer = randomApp.listen(0);
+
+  await new Promise((resolvePromise) => randomServer.once('listening', resolvePromise));
+
+  const { port } = randomServer.address();
+  const randomBaseUrl = `http://127.0.0.1:${port}`;
+
+  try {
+    for (const method of ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS', 'HEAD', 'PATCH', 'TRACE']) {
+      const response = await requestServer(`${randomBaseUrl}/api/random`, method);
+
+      assert.equal(response.status, 200);
+      assert.equal(response.headers['content-type'], 'text/plain; charset=utf-8');
+      assert.equal(response.headers['cache-control'], 'no-store');
+      assert.equal(response.body, method === 'HEAD' ? '' : 'Yes!');
+    }
+  } finally {
+    await new Promise((resolvePromise, reject) => {
+      randomServer.close((error) => (error ? reject(error) : resolvePromise()));
+    });
+  }
+});
+
 test('returns 404 hint for /api without a yes or no suffix', async () => {
   const response = await fetch(`${baseUrl}/api`, {
     method: 'POST',
@@ -439,7 +540,7 @@ test('resolveListenPort uses the socket address when available', () => {
 });
 
 test('resolveListenPort falls back when the address is not an object', () => {
-  assert.equal(resolveListenPort('/tmp/yornaas.sock', 3000), 3000);
+  assert.equal(resolveListenPort('/tmp/yesornoaas.sock', 3000), 3000);
   assert.equal(resolveListenPort(null, 3000), 3000);
 });
 
@@ -559,7 +660,7 @@ test('startServer uses PORT from the environment by default', async (t) => {
     await new Promise((resolvePromise) => startedServer.once('listening', resolvePromise));
 
     const { port } = startedServer.address();
-    assert.equal(log.mock.calls[0]?.arguments[0], `YorNaaS listening on http://localhost:${port}`);
+    assert.equal(log.mock.calls[0]?.arguments[0], `YESorNOaaS listening on http://localhost:${port}`);
 
     await new Promise((resolvePromise, reject) => {
       startedServer.close((error) => (error ? reject(error) : resolvePromise()));
@@ -586,7 +687,7 @@ test('startServer listens and logs the assigned URL', async (t) => {
 
     const { port } = startedServer.address();
     assert.notEqual(port, 0);
-    assert.equal(log.mock.calls[0]?.arguments[0], `YorNaaS listening on http://localhost:${port}`);
+    assert.equal(log.mock.calls[0]?.arguments[0], `YESorNOaaS listening on http://localhost:${port}`);
 
     await new Promise((resolvePromise, reject) => {
       startedServer.close((error) => (error ? reject(error) : resolvePromise()));
@@ -619,7 +720,7 @@ test('startServer connects graceful shutdown state to the default app', async ()
 
     const drainingResponse = await fetch(healthUrl);
     assert.equal(drainingResponse.status, 503);
-    assert.deepEqual(await drainingResponse.json(), { status: 'YorNaaS', version: packageInfo.version });
+    assert.deepEqual(await drainingResponse.json(), { status: 'YESorNOaaS', version: packageInfo.version });
 
     await new Promise((resolvePromise, reject) => {
       startedServer.close((error) => (error ? reject(error) : resolvePromise()));
@@ -692,7 +793,7 @@ test('server entrypoint starts when executed directly', async () => {
     const timeoutId = setTimeout(() => reject(new Error('server startup timed out')), 5000);
 
     const checkReady = () => {
-      if (stdout.includes('YorNaaS listening on http://localhost:')) {
+      if (stdout.includes('YESorNOaaS listening on http://localhost:')) {
         clearTimeout(timeoutId);
         resolvePromise();
       }
@@ -701,7 +802,7 @@ test('server entrypoint starts when executed directly', async () => {
     child.stdout.on('data', checkReady);
     child.on('error', reject);
     child.on('exit', (code) => {
-      if (code !== null && code !== 0 && !stdout.includes('YorNaaS listening on http://localhost:')) {
+      if (code !== null && code !== 0 && !stdout.includes('YESorNOaaS listening on http://localhost:')) {
         clearTimeout(timeoutId);
         reject(new Error(`server exited early with code ${code}`));
       }

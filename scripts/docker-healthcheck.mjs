@@ -7,6 +7,6 @@ if (response.status !== 200) {
 
 const body = await response.json();
 
-if (body.status !== 'YorNaaS' || typeof body.version !== 'string') {
+if (body.status !== 'YESorNOaaS' || typeof body.version !== 'string') {
   process.exit(1);
 }

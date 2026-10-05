@@ -124,7 +124,7 @@ jobs:
         run: npm ci
 
       - name: Build Docker image
-        run: docker build -t yornaas:ci .
+        run: docker build -t yesornoaas:ci .
 
       - name: Smoke-test the built container image
         run: |
@@ -155,13 +155,13 @@ jobs:
           }
 
           cleanup() {
-            docker rm -f yornaas-ci yornaas-ci-alt >/dev/null 2>&1 || true
+            docker rm -f yesornoaas-ci yesornoaas-ci-alt >/dev/null 2>&1 || true
           }
           trap cleanup EXIT
 
-          docker run -d --name yornaas-ci -p 3000:3000 yornaas:ci
-          wait_for_health http://127.0.0.1:3000/health yornaas-ci
-          require_container yornaas-ci
+          docker run -d --name yesornoaas-ci -p 3000:3000 yesornoaas:ci
+          wait_for_health http://127.0.0.1:3000/health yesornoaas-ci
+          require_container yesornoaas-ci
 
           expected_version="$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")"
 
@@ -173,11 +173,17 @@ jobs:
           [ "$api_no_type" = "text/plain; charset=utf-8" ]
           [ "$(cat api-no.txt)" = "No!" ]
 
+          api_random_type="$(curl --fail --silent --show-error --max-time 5 --output api-random.txt --write-out '%{content_type}' http://127.0.0.1:3000/api/random)"
+          [ "$api_random_type" = "text/plain; charset=utf-8" ]
+          grep -E '^(Yes!|No!)$' api-random.txt
+          curl --fail --silent --show-error --max-time 5 -D api-random-headers.txt -o /dev/null http://127.0.0.1:3000/api/random
+          grep -iq '^cache-control: no-store' api-random-headers.txt
+
           health_type="$(curl --fail --silent --show-error --max-time 5 --output health.json --write-out '%{content_type}' http://127.0.0.1:3000/health)"
           [ "$health_type" = "application/json; charset=utf-8" ]
           EXPECTED_VERSION="$expected_version" node -e '
             const health = JSON.parse(require("node:fs").readFileSync("health.json", "utf8"));
-            if (health.status !== "YorNaaS" || health.version !== process.env.EXPECTED_VERSION) {
+            if (health.status !== "YESorNOaaS" || health.version !== process.env.EXPECTED_VERSION) {
               throw new Error(`Unexpected health response: ${JSON.stringify(health)}`);
             }
           '
@@ -188,7 +194,7 @@ jobs:
 
           metrics_type="$(curl --fail --silent --show-error --max-time 5 --output metrics.txt --write-out '%{content_type}' http://127.0.0.1:3000/metrics)"
           [ "$metrics_type" = "text/plain; charset=utf-8; version=0.0.4" ]
-          grep -q 'yornaas_http_requests_total' metrics.txt
+          grep -q 'yesornoaas_http_requests_total' metrics.txt
 
           yes_type="$(curl --fail --silent --show-error --max-time 5 --output yes.html --write-out '%{content_type}' http://127.0.0.1:3000/yes)"
           [[ "$yes_type" == text/html* ]]
@@ -198,23 +204,27 @@ jobs:
           [[ "$no_type" == text/html* ]]
           grep -q 'data-answer="no"' no.html
 
+          random_type="$(curl --fail --silent --show-error --max-time 5 --output random.html --write-out '%{content_type}' http://127.0.0.1:3000/random)"
+          [[ "$random_type" == text/html* ]]
+          grep -q 'data-answer="random"' random.html
+
           root_status="$(curl --silent --show-error --max-time 5 --output root.txt --write-out '%{http_code}' http://127.0.0.1:3000/)"
           [ "$root_status" = "404" ]
-          grep -q 'Use /api/yes or /api/no' root.txt
+          grep -q 'Use /api/yes, /api/no, or /api/random' root.txt
 
           unknown_status="$(curl --silent --show-error --max-time 5 --output unknown.txt --write-out '%{http_code}' http://127.0.0.1:3000/unknown-path)"
           [ "$unknown_status" = "404" ]
-          grep -q 'Use /api/yes or /api/no' unknown.txt
+          grep -q 'Use /api/yes, /api/no, or /api/random' unknown.txt
 
-          [ "$(docker exec yornaas-ci id -u)" != "0" ]
+          [ "$(docker exec yesornoaas-ci id -u)" != "0" ]
 
-          docker run -d --name yornaas-ci-alt -e PORT=8080 -p 8080:8080 yornaas:ci
-          wait_for_health http://127.0.0.1:8080/health yornaas-ci-alt
-          require_container yornaas-ci
-          require_container yornaas-ci-alt
+          docker run -d --name yesornoaas-ci-alt -e PORT=8080 -p 8080:8080 yesornoaas:ci
+          wait_for_health http://127.0.0.1:8080/health yesornoaas-ci-alt
+          require_container yesornoaas-ci
+          require_container yesornoaas-ci-alt
 
-          docker stop --time=30 yornaas-ci >/dev/null
-          [ "$(docker wait yornaas-ci)" -eq 0 ]
+          docker stop --time=30 yesornoaas-ci >/dev/null
+          [ "$(docker wait yesornoaas-ci)" -eq 0 ]
 
           draining_status="$(curl --silent --show-error --max-time 5 --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/health || true)"
           [ "$draining_status" = "000" ] || [ "$draining_status" = "503" ]

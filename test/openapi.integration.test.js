@@ -5,7 +5,7 @@ import { after, before, test } from 'node:test';
 import { parse as parseYaml } from 'yaml';
 import packageInfo from '../package.json' with { type: 'json' };
 import { UNKNOWN_ROUTE_HINT } from '../src/responses.js';
-import { app } from '../src/server.js';
+import { app, createApp } from '../src/server.js';
 
 const openApiDocument = parseYaml(readFileSync(resolve('public/openapi.yaml'), 'utf8'));
 
@@ -39,7 +39,7 @@ test('live endpoints match the OpenAPI response contracts', async () => {
 
   const healthResponse = await fetch(`${baseUrl}/health`);
   assert.equal(healthResponse.status, 200);
-  assert.deepEqual(await healthResponse.json(), { status: 'YorNaaS', version: packageInfo.version });
+  assert.deepEqual(await healthResponse.json(), { status: 'YESorNOaaS', version: packageInfo.version });
 
   const metricsResponse = await fetch(`${baseUrl}/metrics`);
   assert.equal(metricsResponse.status, 200);
@@ -52,6 +52,24 @@ test('live endpoints match the OpenAPI response contracts', async () => {
   const noResponse = await fetch(`${baseUrl}/api/no`, { method: 'POST' });
   assert.equal(noResponse.status, 200);
   assert.equal(await noResponse.text(), 'No!');
+
+  const randomApp = createApp({ randomNumberSource: () => 0 });
+  const randomServer = randomApp.listen(0);
+  await new Promise((resolvePromise) => randomServer.once('listening', resolvePromise));
+  const randomPort = randomServer.address().port;
+
+  try {
+    const randomResponse = await fetch(`http://127.0.0.1:${randomPort}/api/random`, {
+      method: 'POST'
+    });
+    assert.equal(randomResponse.status, 200);
+    assert.equal(randomResponse.headers.get('cache-control'), 'no-store');
+    assert.equal(await randomResponse.text(), 'Yes!');
+  } finally {
+    await new Promise((resolvePromise, reject) => {
+      randomServer.close((error) => (error ? reject(error) : resolvePromise()));
+    });
+  }
 
   const redirectResponse = await fetch(`${baseUrl}/?request=Can%20I%3F&answer=yes`, {
     redirect: 'manual'

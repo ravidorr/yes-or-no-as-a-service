@@ -5,7 +5,9 @@ import packageInfo from '../package.json' with { type: 'json' };
 import { createGracefulShutdown } from './graceful-shutdown.js';
 import { createMetrics } from './metrics.js';
 import {
+  DEFAULT_RANDOM_NUMBER_SOURCE,
   NO_RESPONSE,
+  selectRandomAnswer,
   SERVICE_NAME,
   UNKNOWN_ROUTE_HINT,
   YES_RESPONSE
@@ -24,7 +26,8 @@ export function createApp({
   rateLimitConfig,
   isShuttingDown = () => false,
   metrics = createMetrics(),
-  trustProxy = parseTrustProxyConfig()
+  trustProxy = parseTrustProxyConfig(),
+  randomNumberSource = DEFAULT_RANDOM_NUMBER_SOURCE
 } = {}) {
   const app = express();
   const publicPath = resolve(__dirname, '../public');
@@ -79,7 +82,10 @@ export function createApp({
 
     if (req.query.answer === 'yes') {
       answer = 'yes';
+    } else if (req.query.answer === 'random') {
+      answer = 'random';
     }
+
     const query = new URLSearchParams({ request: req.query.request });
 
     res.redirect(308, `/${answer}?${query}`);
@@ -93,6 +99,10 @@ export function createApp({
     res.sendFile(resolve(publicPath, 'no.html'));
   });
 
+  app.get('/random', (_req, res) => {
+    res.sendFile(resolve(publicPath, 'random.html'));
+  });
+
   app.use(createRateLimitMiddleware(resolvedRateLimitConfig));
 
   app.all('/api/yes', (req, res) => {
@@ -101,6 +111,14 @@ export function createApp({
 
   app.all('/api/no', (req, res) => {
     res.status(200).type('text/plain').send(NO_RESPONSE);
+  });
+
+  app.all('/api/random', (_req, res) => {
+    res
+      .status(200)
+      .type('text/plain')
+      .set('Cache-Control', 'no-store')
+      .send(selectRandomAnswer(randomNumberSource));
   });
 
   app.use((req, res) => {

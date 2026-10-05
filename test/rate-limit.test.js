@@ -41,6 +41,31 @@ test('throttles /api/no after the configured limit is exceeded', async () => {
   }
 });
 
+test('throttles /api/random after the configured limit is exceeded', async () => {
+  const { baseUrl, close } = await startServer(
+    createApp({
+      rateLimitConfig: strictRateLimitConfig,
+      randomNumberSource: () => 0
+    })
+  );
+
+  try {
+    for (let index = 0; index < strictRateLimitConfig.max; index += 1) {
+      const response = await fetch(`${baseUrl}/api/random`);
+
+      assert.equal(response.status, 200);
+      assert.equal(await response.text(), 'Yes!');
+    }
+
+    const throttled = await fetch(`${baseUrl}/api/random`);
+
+    assert.equal(throttled.status, 429);
+    assert.equal(await throttled.text(), UNKNOWN_ROUTE_HINT);
+  } finally {
+    await close();
+  }
+});
+
 test('throttles /api/yes after the configured limit is exceeded', async () => {
   const { baseUrl, close } = await startServer(createApp({ rateLimitConfig: strictRateLimitConfig }));
 
@@ -100,6 +125,10 @@ test('does not throttle GET /version, GET /health, GET /metrics, static assets, 
     assert.equal(noPage.status, 200);
     assert.match(noPage.headers.get('content-type'), /^text\/html/);
 
+    const randomPage = await fetch(`${baseUrl}/random`);
+    assert.equal(randomPage.status, 200);
+    assert.match(randomPage.headers.get('content-type'), /^text\/html/);
+
     await fetch(`${baseUrl}/anything`);
     const throttled = await fetch(`${baseUrl}/anything-again`);
     assert.equal(throttled.status, 429);
@@ -126,11 +155,13 @@ test('does not consume API quota when loading web pages', async () => {
   try {
     const yesPage = await fetch(`${baseUrl}/yes`);
     const noPage = await fetch(`${baseUrl}/no`);
+    const randomPage = await fetch(`${baseUrl}/random`);
     const apiResponse = await fetch(`${baseUrl}/api/yes`);
     const throttled = await fetch(`${baseUrl}/api/yes`);
 
     assert.equal(yesPage.status, 200);
     assert.equal(noPage.status, 200);
+    assert.equal(randomPage.status, 200);
     assert.equal(apiResponse.status, 200);
     assert.equal(await apiResponse.text(), 'Yes!');
     assert.equal(throttled.status, 429);

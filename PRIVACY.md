@@ -1,17 +1,17 @@
 # Privacy Policy
 
-YorNaaS is a small open source project. This policy describes how the project handles personal data.
+YESorNOaaS is a small open source project. This policy describes how the project handles personal data.
 
 ## Summary
 
-YorNaaS does not collect, store, sell, or track end users in the application itself.
+YESorNOaaS does not collect, store, sell, or track end users in the application itself.
 
 We do not use accounts, analytics, advertising trackers, or cookies for tracking
 end users.
 
-## What YorNaaS does
+## What YESorNOaaS does
 
-When you run YorNaaS locally or deploy it yourself, the service responds to requests with plain text output. Request content is handled in memory to produce that response and is not persisted by the application.
+When you run YESorNOaaS locally or deploy it yourself, the service responds to requests with plain text output. Request content is handled in memory to produce that response and is not persisted by the application.
 
 Shared links include the request text in the URL query string. Browser history,
 referrer headers, proxy logs, and similar infrastructure may retain that URL.
@@ -23,11 +23,11 @@ X, Facebook, LinkedIn, email, and WhatsApp. Those actions happen only when a
 user clicks a share control. The destination provider then receives the share
 URL and any text included in that link according to its own policies.
 
-YorNaaS does not send that data to those providers automatically.
+YESorNOaaS does not send that data to those providers automatically.
 
 ## What we do not do
 
-YorNaaS does not and will not:
+YESorNOaaS does not and will not:
 
 - require user accounts
 - collect names, email addresses, or contact details
@@ -37,13 +37,13 @@ YorNaaS does not and will not:
 
 ## Third-party services
 
-This repository is hosted on GitHub. GitHub may process data according to its own policies when you browse the repository, open issues, or submit pull requests. That processing is governed by GitHub, not by YorNaaS.
+This repository is hosted on GitHub. GitHub may process data according to its own policies when you browse the repository, open issues, or submit pull requests. That processing is governed by GitHub, not by YESorNOaaS.
 
-If you deploy YorNaaS to your own infrastructure, your hosting provider's policies apply to that deployment.
+If you deploy YESorNOaaS to your own infrastructure, your hosting provider's policies apply to that deployment.
 
 ## Operational metrics
 
-YorNaaS does not track users. Self-hosted operators may scrape `GET /metrics` for
+YESorNOaaS does not track users. Self-hosted operators may scrape `GET /metrics` for
 operational monitoring (CPU, memory, HTTP request counts, and similar runtime
 signals). That telemetry describes the service process, not individual users or
 request content persisted by the application.

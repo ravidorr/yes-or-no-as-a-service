@@ -1,4 +1,4 @@
-# Contributing to YorNaaS
+# Contributing to YESorNOaaS
 
 Thanks for helping improve Yes or No as a Service.
 
@@ -19,9 +19,10 @@ npm install
 
 ## Interfaces
 
-The [README](README.md) documents both answers across the `/api/yes` and
-`/api/no` API routes, the `yornaas yes` and `yornaas no` CLI subcommands, the
-`yes` and `no` MCP tools, and the `/yes` and `/no` web UI pages.
+The [README](README.md) documents the deterministic and random answers across
+the `/api/yes`, `/api/no`, and `/api/random` API routes, the `yesornoaas yes`,
+`yesornoaas no`, and `yesornoaas random` CLI subcommands, the `yes`, `no`, and
+`random` MCP tools, and the `/yes`, `/no`, and `/random` web UI pages.
 
 ## Validation
 
@@ -74,7 +75,7 @@ Protected `main` requires:
 ## Releases
 
 When a version bump merges to `main`, GitHub Actions creates a GitHub Release
-and publishes `@ravidor/yornaas` to npm via
+and publishes `@ravidor/yesornoaas` to npm via
 [Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) (OIDC). No
 long-lived `NPM_TOKEN` secret is required.
 
@@ -93,10 +94,10 @@ Before the first automated publish, maintainers must:
    npm run lint
    npm run test:coverage
    npm publish --access public --provenance
-   npm view @ravidor/yornaas version
+   npm view @ravidor/yesornoaas version
    ```
 
-3. On npm, open `@ravidor/yornaas` → **Settings** → **Trusted Publisher** →
+3. On npm, open `@ravidor/yesornoaas` → **Settings** → **Trusted Publisher** →
    **GitHub Actions** and link `ravidorr/yes-or-no-as-a-service` with workflow
    file `release.yml`.
 
@@ -104,10 +105,10 @@ To smoke-test the publish tarball locally before a release:
 
 ```sh
 npm pack
-npm install -g ./ravidor-yornaas-*.tgz
-yornaas yes
-yornaas no
-rm ravidor-yornaas-*.tgz
+npm install -g ./ravidor-yesornoaas-*.tgz
+yesornoaas yes
+yesornoaas no
+rm ravidor-yesornoaas-*.tgz
 ```
 
 Pack tarballs are gitignored (`*.tgz`); do not commit them.

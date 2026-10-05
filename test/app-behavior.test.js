@@ -68,6 +68,42 @@ test('submitAnswerRequest shows the yes response on success', async () => {
   assert.deepEqual(JSON.parse(localThis.fetchCalls[0].options.body), { text: 'Can I?' });
 });
 
+test('submitAnswerRequest shows the random response on success', async () => {
+  const localThis = {
+    submittedText: 'Can I?',
+    current: true,
+    successText: null,
+    fetchCalls: []
+  };
+
+  await submitAnswerRequest({
+    answer: 'random',
+    submittedText: localThis.submittedText,
+    isCurrentRequest: () => localThis.current,
+    fetch: async (url, options) => {
+      localThis.fetchCalls.push({ url, options });
+
+      return {
+        ok: true,
+        async text() {
+          return 'No!';
+        }
+      };
+    },
+    AbortController: MockAbortController,
+    setTimeout: () => 1,
+    clearTimeout: () => {},
+    onSuccess: (text) => {
+      localThis.successText = text;
+    },
+    onTimeout: () => {},
+    onUnavailable: () => {}
+  });
+
+  assert.equal(localThis.successText, 'No!');
+  assert.equal(localThis.fetchCalls[0].url, '/api/random');
+});
+
 test('submitAnswerRequest shows the no response on success', async () => {
   const localThis = {
     submittedText: 'Can I?',

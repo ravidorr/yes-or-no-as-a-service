@@ -27,8 +27,19 @@ test('buildShareUrl defaults answer mode to yes', () => {
 });
 
 test('buildShareText prefixes the request with the answer mode', () => {
-  assert.equal(buildShareText('Can I have a pony?', 'yes'), 'YorNaaS says yes to: Can I have a pony?');
-  assert.equal(buildShareText('Can I have a pony?', 'no'), 'YorNaaS says no to: Can I have a pony?');
+  assert.equal(buildShareText('Can I have a pony?', 'yes'), 'YESorNOaaS says yes to: Can I have a pony?');
+  assert.equal(buildShareText('Can I have a pony?', 'no'), 'YESorNOaaS says no to: Can I have a pony?');
+  assert.equal(
+    buildShareText('Can I have a pony?', 'random'),
+    'YESorNOaaS will randomly answer: Can I have a pony?'
+  );
+});
+
+test('buildShareUrl supports random answer mode', () => {
+  assert.equal(
+    buildShareUrl(baseHref, 'Can I?', 'random'),
+    'https://example.test/random?request=Can+I%3F#fragment'
+  );
 });
 
 test('buildSocialShareLinks returns encoded provider URLs', () => {
@@ -38,11 +49,11 @@ test('buildSocialShareLinks returns encoded provider URLs', () => {
   assert.match(yesLinks.x, /^https:\/\/twitter\.com\/intent\/tweet\?/);
   assert.match(yesLinks.facebook, /^https:\/\/www\.facebook\.com\/sharer\/sharer\.php\?u=/);
   assert.match(yesLinks.linkedIn, /^https:\/\/www\.linkedin\.com\/sharing\/share-offsite\/\?url=/);
-  assert.match(yesLinks.email, /^mailto:\?subject=YorNaaS(%20|\+)link&body=/);
+  assert.match(yesLinks.email, /^mailto:\?subject=YESorNOaaS(%20|\+)link&body=/);
   assert.match(yesLinks.whatsApp, /^https:\/\/wa\.me\/\?text=/);
 
   const noLinks = buildSocialShareLinks(baseHref, 'Can I?', 'no');
 
   assert.equal(noLinks.url, 'https://example.test/no?request=Can+I%3F#fragment');
-  assert.match(noLinks.email, /^mailto:\?subject=YorNaaS(%20|\+)link&body=/);
+  assert.match(noLinks.email, /^mailto:\?subject=YESorNOaaS(%20|\+)link&body=/);
 });

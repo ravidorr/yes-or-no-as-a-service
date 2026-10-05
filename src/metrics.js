@@ -12,8 +12,10 @@ const KNOWN_ROUTES = new Map([
   ['/metrics', 'metrics'],
   ['/api/yes', 'api_yes'],
   ['/api/no', 'api_no'],
+  ['/api/random', 'api_random'],
   ['/yes', 'web_yes'],
-  ['/no', 'web_no']
+  ['/no', 'web_no'],
+  ['/random', 'web_random']
 ]);
 
 export function normalizeRoute(path) {
@@ -25,21 +27,21 @@ export function createMetrics() {
   collectDefaultMetrics({ register: registry });
 
   const requestsTotal = new Counter({
-    name: 'yornaas_http_requests_total',
+    name: 'yesornoaas_http_requests_total',
     help: 'Total number of HTTP requests handled by the service',
     labelNames: ['route', 'method', 'status_code'],
     registers: [registry]
   });
 
   const requestDurationSeconds = new Histogram({
-    name: 'yornaas_http_request_duration_seconds',
+    name: 'yesornoaas_http_request_duration_seconds',
     help: 'HTTP request duration in seconds',
     labelNames: ['route', 'method', 'status_code'],
     registers: [registry]
   });
 
   const requestsInFlight = new Gauge({
-    name: 'yornaas_http_requests_in_flight',
+    name: 'yesornoaas_http_requests_in_flight',
     help: 'Number of HTTP requests currently being handled',
     labelNames: ['route', 'method'],
     registers: [registry]

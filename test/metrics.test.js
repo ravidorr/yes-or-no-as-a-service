@@ -28,8 +28,10 @@ test('normalizeRoute maps known service paths and collapses everything else', ()
   assert.equal(normalizeRoute('/metrics'), 'metrics');
   assert.equal(normalizeRoute('/api/yes'), 'api_yes');
   assert.equal(normalizeRoute('/api/no'), 'api_no');
+  assert.equal(normalizeRoute('/api/random'), 'api_random');
   assert.equal(normalizeRoute('/yes'), 'web_yes');
   assert.equal(normalizeRoute('/no'), 'web_no');
+  assert.equal(normalizeRoute('/random'), 'web_random');
   assert.equal(normalizeRoute('/anything'), 'not_found');
   assert.equal(normalizeRoute('/health/anything'), 'not_found');
 });
@@ -43,10 +45,10 @@ test('createMetrics exposes isolated registries with default and custom metric f
 
   assert.notEqual(firstText, secondText);
   assert.match(firstText, /# HELP process_cpu_user_seconds_total/);
-  assert.match(firstText, /# HELP yornaas_http_requests_total/);
-  assert.match(firstText, /# HELP yornaas_http_request_duration_seconds/);
-  assert.match(firstText, /# HELP yornaas_http_requests_in_flight/);
-  assert.match(secondText, /# HELP yornaas_http_requests_total/);
+  assert.match(firstText, /# HELP yesornoaas_http_requests_total/);
+  assert.match(firstText, /# HELP yesornoaas_http_request_duration_seconds/);
+  assert.match(firstText, /# HELP yesornoaas_http_requests_in_flight/);
+  assert.match(secondText, /# HELP yesornoaas_http_requests_total/);
 });
 
 test('middleware records normalized labels and decrements in-flight gauge on finish', async () => {
@@ -64,9 +66,9 @@ test('middleware records normalized labels and decrements in-flight gauge on fin
 
     const text = await metrics.metrics();
 
-    assert.match(text, /yornaas_http_requests_total\{route="api_no",method="POST",status_code="201"\} 1/);
-    assert.match(text, /yornaas_http_request_duration_seconds_count\{route="api_no",method="POST",status_code="201"\} 1/);
-    assert.match(text, /yornaas_http_requests_in_flight\{route="api_no",method="POST"\} 0/);
+    assert.match(text, /yesornoaas_http_requests_total\{route="api_no",method="POST",status_code="201"\} 1/);
+    assert.match(text, /yesornoaas_http_request_duration_seconds_count\{route="api_no",method="POST",status_code="201"\} 1/);
+    assert.match(text, /yesornoaas_http_requests_in_flight\{route="api_no",method="POST"\} 0/);
   } finally {
     await close();
   }
@@ -87,7 +89,7 @@ test('middleware records api_yes route labels', async () => {
 
     const text = await metrics.metrics();
 
-    assert.match(text, /yornaas_http_requests_total\{route="api_yes",method="GET",status_code="200"\} 1/);
+    assert.match(text, /yesornoaas_http_requests_total\{route="api_yes",method="GET",status_code="200"\} 1/);
   } finally {
     await close();
   }
@@ -108,8 +110,8 @@ test('middleware does not observe GET /metrics scrape traffic', async () => {
 
     const text = await metrics.metrics();
 
-    assert.doesNotMatch(text, /yornaas_http_requests_total\{route="metrics"/);
-    assert.doesNotMatch(text, /yornaas_http_requests_in_flight\{route="metrics"/);
+    assert.doesNotMatch(text, /yesornoaas_http_requests_total\{route="metrics"/);
+    assert.doesNotMatch(text, /yesornoaas_http_requests_in_flight\{route="metrics"/);
   } finally {
     await close();
   }
@@ -138,8 +140,8 @@ test('middleware observes non-GET /metrics not_found traffic', async () => {
 
     const text = await metrics.metrics();
 
-    assert.match(text, /yornaas_http_requests_total\{route="metrics",method="POST",status_code="404"\} 1/);
-    assert.match(text, /yornaas_http_requests_in_flight\{route="metrics",method="POST"\} 0/);
+    assert.match(text, /yesornoaas_http_requests_total\{route="metrics",method="POST",status_code="404"\} 1/);
+    assert.match(text, /yesornoaas_http_requests_in_flight\{route="metrics",method="POST"\} 0/);
   } finally {
     await close();
   }
@@ -174,7 +176,7 @@ test('middleware decrements in-flight gauge when the client disconnects early', 
 
     const text = await metrics.metrics();
 
-    assert.match(text, /yornaas_http_requests_in_flight\{route="not_found",method="GET"\} 0/);
+    assert.match(text, /yesornoaas_http_requests_in_flight\{route="not_found",method="GET"\} 0/);
   } finally {
     await close();
   }
@@ -202,7 +204,7 @@ test('request close is ignored after finish already finalized metrics', async ()
 
   const text = await metrics.metrics();
 
-  assert.match(text, /yornaas_http_requests_total\{route="version",method="GET",status_code="200"\} 1/);
+  assert.match(text, /yesornoaas_http_requests_total\{route="version",method="GET",status_code="200"\} 1/);
 });
 
 test('finalize runs only once across finish, response close, and request close', async () => {
@@ -228,8 +230,8 @@ test('finalize runs only once across finish, response close, and request close',
 
   const text = await metrics.metrics();
 
-  assert.match(text, /yornaas_http_requests_total\{route="api_no",method="GET",status_code="200"\} 1/);
-  assert.match(text, /yornaas_http_requests_in_flight\{route="api_no",method="GET"\} 0/);
+  assert.match(text, /yesornoaas_http_requests_total\{route="api_no",method="GET",status_code="200"\} 1/);
+  assert.match(text, /yesornoaas_http_requests_in_flight\{route="api_no",method="GET"\} 0/);
 });
 
 test('request close uses 499 when no response status was set', async () => {
@@ -251,7 +253,7 @@ test('request close uses 499 when no response status was set', async () => {
 
   const text = await metrics.metrics();
 
-  assert.match(text, /yornaas_http_requests_total\{route="not_found",method="GET",status_code="499"\} 1/);
+  assert.match(text, /yesornoaas_http_requests_total\{route="not_found",method="GET",status_code="499"\} 1/);
 });
 
 test('request close finalizes metrics when the response never finishes', async () => {
@@ -274,8 +276,8 @@ test('request close finalizes metrics when the response never finishes', async (
 
   const text = await metrics.metrics();
 
-  assert.match(text, /yornaas_http_requests_total\{route="not_found",method="GET",status_code="499"\} 1/);
-  assert.match(text, /yornaas_http_requests_in_flight\{route="not_found",method="GET"\} 0/);
+  assert.match(text, /yesornoaas_http_requests_total\{route="not_found",method="GET",status_code="499"\} 1/);
+  assert.match(text, /yesornoaas_http_requests_in_flight\{route="not_found",method="GET"\} 0/);
 });
 
 test('response close after finish does not double-count when writableFinished is true', async () => {
@@ -300,7 +302,7 @@ test('response close after finish does not double-count when writableFinished is
 
   const text = await metrics.metrics();
 
-  assert.match(text, /yornaas_http_requests_total\{route="health",method="GET",status_code="200"\} 1/);
+  assert.match(text, /yesornoaas_http_requests_total\{route="health",method="GET",status_code="200"\} 1/);
 });
 
 test('middleware normalizes unmatched paths to not_found', async () => {
@@ -317,7 +319,7 @@ test('middleware normalizes unmatched paths to not_found', async () => {
 
     const text = await metrics.metrics();
 
-    assert.match(text, /yornaas_http_requests_total\{route="not_found",method="GET",status_code="404"\} 1/);
+    assert.match(text, /yesornoaas_http_requests_total\{route="not_found",method="GET",status_code="404"\} 1/);
   } finally {
     await close();
   }

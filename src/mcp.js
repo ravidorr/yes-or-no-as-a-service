@@ -4,9 +4,14 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { isExecutedModule } from './run-if-main.js';
 import packageJson from '../package.json' with { type: 'json' };
-import { NO_RESPONSE, YES_RESPONSE } from './responses.js';
+import {
+  DEFAULT_RANDOM_NUMBER_SOURCE,
+  NO_RESPONSE,
+  selectRandomAnswer,
+  YES_RESPONSE
+} from './responses.js';
 
-function registerAnswerTool(server, name, title, response) {
+function registerAnswerTool(server, name, title, response, { idempotentHint = true } = {}) {
   server.registerTool(
     name,
     {
@@ -15,7 +20,7 @@ function registerAnswerTool(server, name, title, response) {
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
-        idempotentHint: true,
+        idempotentHint,
         openWorldHint: false
       }
     },
@@ -30,14 +35,45 @@ function registerAnswerTool(server, name, title, response) {
   );
 }
 
-export function createMcpServer() {
+export function createRandomToolHandler(randomNumberSource = DEFAULT_RANDOM_NUMBER_SOURCE) {
+  return async () => ({
+    content: [
+      {
+        type: 'text',
+        text: selectRandomAnswer(randomNumberSource)
+      }
+    ]
+  });
+}
+
+function registerRandomAnswerTool(server, randomNumberSource) {
+  server.registerTool(
+    'random',
+    {
+      title: 'Random',
+      description: 'Return Yes! or No! at random for any request.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: false,
+        openWorldHint: false
+      }
+    },
+    createRandomToolHandler(randomNumberSource)
+  );
+}
+
+export function createMcpServer({
+  randomNumberSource = DEFAULT_RANDOM_NUMBER_SOURCE
+} = {}) {
   const server = new McpServer({
-    name: 'yornaas',
+    name: 'yesornoaas',
     version: packageJson.version
   });
 
   registerAnswerTool(server, 'yes', 'Yes', YES_RESPONSE);
   registerAnswerTool(server, 'no', 'No', NO_RESPONSE);
+  registerRandomAnswerTool(server, randomNumberSource);
 
   return server;
 }

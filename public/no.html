@@ -3,18 +3,18 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>YorNaaS - No</title>
+    <title>YESorNOaaS - No</title>
     <link rel="stylesheet" href="/styles.css">
   </head>
   <body data-answer="no">
     <main class="app">
       <section class="panel" aria-labelledby="title">
         <header class="header">
-          <h1 id="title">YorNaaS - No as a Service</h1>
+          <h1 id="title">Ask a yes/no question and get a No! response</h1>
         </header>
 
-        <form id="yornaas-form" class="form">
-          <label for="request-text">What do you want to ask YorNaaS?</label>
+        <form id="yesornoaas-form" class="form">
+          <label for="request-text">Ask a yes/no question</label>
           <div class="input-row">
             <input
               id="request-text"
@@ -30,7 +30,7 @@
         <div id="status-row" class="status-row" aria-live="polite" hidden>
           <span id="loading" class="loading" hidden>
             <span class="spinner" aria-hidden="true"></span>
-            Waiting for YorNaaS
+            Waiting for YESorNOaaS
           </span>
           <span id="status" class="status"></span>
         </div>
@@ -39,7 +39,7 @@
 
         <div id="share-row" class="share-row" hidden>
           <p class="done-text">All done. Share the link below.</p>
-          <label for="share-link">YorNaaS no link</label>
+          <label for="share-link">YESorNOaaS no link</label>
           <p id="share-help" class="help-text">
             Opening this link shows the question and the No! reply.
           </p>
@@ -56,7 +56,7 @@
             <button id="copy-url-button" type="button" disabled>Copy link</button>
             <button id="preview-link-button" type="button" disabled>Preview link</button>
           </div>
-          <div class="social-share" role="group" aria-label="Share YorNaaS no link">
+          <div class="social-share" role="group" aria-label="Share YESorNOaaS no link">
             <p class="social-label">Share link</p>
             <div class="social-actions">
               <a id="share-x-link" class="social-link" href="#" target="_blank" rel="noopener noreferrer" aria-label="Share on X" title="Share on X" aria-disabled="true">
@@ -86,6 +86,10 @@
               </a>
             </div>
           </div>
+          <nav class="mode-nav" aria-label="Other YESorNOaaS answer modes">
+            <a href="/yes">Get a &quot;Yes!&quot; replay</a>
+            <a href="/random">Get a random replay</a>
+          </nav>
           <p id="share-status" class="share-status" aria-live="polite"></p>
         </div>
       </section>
