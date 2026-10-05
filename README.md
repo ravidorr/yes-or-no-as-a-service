@@ -57,7 +57,7 @@ curl http://localhost:3000/health
 Output:
 
 ```json
-{"status":"YorNaaS","version":"1.0.0"}
+{"status":"YorNaaS","version":"1.0.1"}
 ```
 
 Prometheus metrics:
