@@ -1,6 +1,6 @@
 {
   "name": "@ravidor/yornaas",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Yes or No as a Service: call /api/yes or /api/no for Yes! or No!",
   "license": "MIT",
   "type": "module",
