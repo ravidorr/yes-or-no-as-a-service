@@ -15,6 +15,7 @@ test('listSourceFiles discovers every src module', () => {
     'rate-limit-config.js',
     'rate-limit.js',
     'responses.js',
+    'run-if-main.js',
     'server.js',
     'shutdown-config.js',
     'trust-proxy-config.js'

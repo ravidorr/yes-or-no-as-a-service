@@ -23,7 +23,12 @@ Install globally from npm:
 
 ```sh
 npm install -g @ravidor/yornaas
+npm view @ravidor/yornaas version
 ```
+
+The first npm release must be published manually by a maintainer with access to
+the `@ravidor` scope. See [CONTRIBUTING.md](CONTRIBUTING.md) for bootstrap
+steps. Later releases are automated through GitHub Actions Trusted Publishing.
 
 Or clone and run locally:
 
@@ -57,7 +62,7 @@ curl http://localhost:3000/health
 Output:
 
 ```json
-{"status":"YorNaaS","version":"1.0.1"}
+{"status":"YorNaaS","version":"1.0.2"}
 ```
 
 Prometheus metrics:
@@ -134,6 +139,11 @@ Configure the drain deadline and readiness grace with:
 ```sh
 SHUTDOWN_TIMEOUT_MS=30000 SHUTDOWN_READINESS_GRACE_MS=1000 npm start
 ```
+
+`SHUTDOWN_READINESS_GRACE_MS` may be `0`. It must not exceed
+`SHUTDOWN_TIMEOUT_MS`.
+
+`PORT` must be an integer between `0` and `65535`.
 
 ## Docker
 

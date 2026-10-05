@@ -20,7 +20,7 @@ test('Dockerfile uses Node 22 Alpine with production runtime contract', () => {
   assert.match(dockerfile, /^HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \\$/m);
   assert.match(
     dockerfile,
-    /^  CMD wget -qO- "http:\/\/127\.0\.0\.1:\$\{PORT\}\/health" \| grep -q '"status":"YorNaaS"'$/m
+    /^  CMD \["node", "scripts\/docker-healthcheck\.mjs"\]$/m
   );
   assert.match(
     dockerfile,

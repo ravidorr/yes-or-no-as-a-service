@@ -1,6 +1,6 @@
 import express from 'express';
 import { dirname, resolve } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
+import { fileURLToPath } from 'node:url';
 import packageInfo from '../package.json' with { type: 'json' };
 import { createGracefulShutdown } from './graceful-shutdown.js';
 import { createMetrics } from './metrics.js';
@@ -14,6 +14,7 @@ import { createRateLimitMiddleware } from './rate-limit.js';
 import { parseRateLimitConfig, validateRateLimitConfig } from './rate-limit-config.js';
 import { parseShutdownConfig } from './shutdown-config.js';
 import { parseTrustProxyConfig } from './trust-proxy-config.js';
+import { isExecutedModule } from './run-if-main.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -74,7 +75,11 @@ export function createApp({
       return;
     }
 
-    const answer = req.query.answer === 'yes' ? 'yes' : 'no';
+    let answer = 'no';
+
+    if (req.query.answer === 'yes') {
+      answer = 'yes';
+    }
     const query = new URLSearchParams({ request: req.query.request });
 
     res.redirect(308, `/${answer}?${query}`);
@@ -113,16 +118,28 @@ export function resolveListenPort(address, fallbackPort) {
   return typeof address === 'object' && address ? address.port : fallbackPort;
 }
 
-export function resolveServerPort(port = process.env.PORT || 3000) {
+export function parseListenPort(value) {
+  const raw = String(value ?? process.env.PORT ?? 3000);
+  const port = Number.parseInt(raw, 10);
+
+  if (!/^\d+$/.test(raw) || port < 0 || port > 65_535) {
+    throw new Error('PORT must be an integer between 0 and 65535');
+  }
+
   return port;
+}
+
+export function resolveServerPort(port = process.env.PORT ?? 3000) {
+  return parseListenPort(port);
 }
 
 export function startServer(
   port = resolveServerPort(),
   { shutdownConfig = parseShutdownConfig() } = {}
 ) {
-  const server = app.listen(port, () => {
-    const actualPort = resolveListenPort(server.address(), port);
+  const listenPort = parseListenPort(port);
+  const server = app.listen(listenPort, () => {
+    const actualPort = resolveListenPort(server.address(), listenPort);
 
     console.log(`${SERVICE_NAME} listening on http://localhost:${actualPort}`);
   });
@@ -143,7 +160,7 @@ export function runIfMain({
   argvPath = process.argv[1],
   start = startServer
 } = {}) {
-  if (moduleUrl === pathToFileURL(resolve(argvPath)).href) {
+  if (isExecutedModule(moduleUrl, argvPath)) {
     start().gracefulShutdown.install();
   }
 }

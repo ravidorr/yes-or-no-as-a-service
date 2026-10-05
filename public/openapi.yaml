@@ -1,13 +1,44 @@
 openapi: 3.1.1
 info:
   title: YorNaaS API
-  version: 1.0.0
+  version: 1.0.2
   description: |
     Call `/api/yes` for `Yes!` or `/api/no` for `No!`.
     Static assets, `GET /version`, `GET /health`, and `GET /metrics` are served
-    outside the answer routes. Unmatched paths return `404 text/plain` with a hint.
-    Rate-limited requests return `429 text/plain` with the same hint.
+    outside the answer routes. Legacy root share URLs with a `request` query
+    parameter redirect to `/yes` or `/no`. Other unmatched paths return
+    `404 text/plain` with a hint. Rate-limited requests return `429 text/plain`
+    with the same hint.
 paths:
+  /:
+    get:
+      summary: Redirect legacy root share links to the matching answer page
+      parameters:
+        - name: request
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: answer
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [yes, no]
+      responses:
+        '308':
+          description: Redirect to the matching answer page
+          headers:
+            Location:
+              schema:
+                type: string
+        '404':
+          description: Root path without a request query parameter
+          content:
+            text/plain:
+              schema:
+                type: string
+                const: 'Use /api/yes or /api/no. Example: GET /api/yes -> Yes!'
   /version:
     get:
       summary: Return the package version as plain text
@@ -178,6 +209,6 @@ components:
         text/plain:
           schema:
             type: string
-            const: Use /api/yes or /api/no. Example: GET /api/yes -> Yes!
+            const: 'Use /api/yes or /api/no. Example: GET /api/yes -> Yes!'
 x-yornaas-unknown-routes:
-  description: Unmatched request paths return `404 text/plain` with a hint until throttled, then `429 text/plain` with the same hint.
+  description: Unmatched request paths, except legacy root share redirects, return `404 text/plain` with a hint until throttled, then `429 text/plain` with the same hint.

@@ -11,6 +11,7 @@ import {
 import {
   app,
   createApp,
+  parseListenPort,
   resolveListenPort,
   resolveServerPort,
   runIfMain,
@@ -232,6 +233,9 @@ test('serves the OpenAPI specification', async () => {
   assert.equal(response.headers.get('content-type'), 'text/yaml; charset=utf-8');
   assert.match(document, /^openapi: 3\.1\.1$/m);
   assert.match(document, /^  title: YorNaaS API$/m);
+  assert.match(document, new RegExp(`^  version: ${packageInfo.version.replace(/\./g, '\\.')}$`, 'm'));
+  assert.match(document, /^  \/:$/m);
+  assert.match(document, /^        '308':$/m);
   assert.match(
     document,
     /^  \/version:\n    get:\n      summary: Return the package version as plain text\n      responses:\n        '200':\n          description: Package version\n          content:\n            text\/plain:\n              schema:\n                type: string$/m
@@ -247,7 +251,7 @@ test('serves the OpenAPI specification', async () => {
   assert.match(document, /^    NoResponse:$/m);
   assert.match(document, /^    ThrottledResponse:$/m);
   assert.match(document, /^x-yornaas-unknown-routes:$/m);
-  assert.match(document, /^  description: Unmatched request paths return `404 text\/plain` with a hint until throttled, then `429 text\/plain` with the same hint\.$/m);
+  assert.match(document, /^  description: Unmatched request paths, except legacy root share redirects, return `404 text\/plain` with a hint until throttled, then `429 text\/plain` with the same hint\.$/m);
 });
 
 test('returns 404 hint for GET /', async () => {
@@ -256,6 +260,14 @@ test('returns 404 hint for GET /', async () => {
   assert.equal(response.status, 404);
   assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8');
   assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+});
+
+test('returns 404 hint for GET / when request is not a string query value', async () => {
+  const response = await requestServer(`${baseUrl}/?request=a&request=b`, 'GET');
+
+  assert.equal(response.status, 404);
+  assert.equal(response.headers['content-type'], 'text/plain; charset=utf-8');
+  assert.equal(response.body, UNKNOWN_ROUTE_HINT);
 });
 
 test('redirects legacy root share links to the matching answer page', async () => {
@@ -451,7 +463,7 @@ test('resolveServerPort uses PORT from the environment', () => {
 
   try {
     process.env.PORT = '8080';
-    assert.equal(resolveServerPort(), '8080');
+    assert.equal(resolveServerPort(), 8080);
   } finally {
     if (previousPort === undefined) {
       delete process.env.PORT;
@@ -459,6 +471,40 @@ test('resolveServerPort uses PORT from the environment', () => {
       process.env.PORT = previousPort;
     }
   }
+});
+
+test('parseListenPort accepts valid TCP ports including zero', () => {
+  assert.equal(parseListenPort('0'), 0);
+  assert.equal(parseListenPort('3000'), 3000);
+  assert.equal(parseListenPort('65535'), 65535);
+});
+
+test('parseListenPort reads PORT from the environment when no value is passed', () => {
+  const previousPort = process.env.PORT;
+
+  try {
+    process.env.PORT = '4000';
+    assert.equal(parseListenPort(), 4000);
+    delete process.env.PORT;
+    assert.equal(parseListenPort(), 3000);
+  } finally {
+    if (previousPort === undefined) {
+      delete process.env.PORT;
+    } else {
+      process.env.PORT = previousPort;
+    }
+  }
+});
+
+test('parseListenPort rejects invalid port values', () => {
+  assert.throws(() => parseListenPort('not-a-port'), /PORT must be an integer between 0 and 65535/);
+  assert.throws(() => parseListenPort('-1'), /PORT must be an integer between 0 and 65535/);
+  assert.throws(() => parseListenPort('65536'), /PORT must be an integer between 0 and 65535/);
+  assert.throws(() => parseListenPort('1.5'), /PORT must be an integer between 0 and 65535/);
+});
+
+test('startServer rejects invalid PORT values before listening', () => {
+  assert.throws(() => startServer('not-a-port'), /PORT must be an integer between 0 and 65535/);
 });
 
 test('runIfMain starts the server and installs graceful shutdown for the executed module', (t) => {
@@ -483,6 +529,18 @@ test('runIfMain skips startup when imported as a dependency', (t) => {
   runIfMain({
     moduleUrl: pathToFileURL(serverPath).href,
     argvPath: resolve('test/server.test.js'),
+    start
+  });
+
+  assert.equal(start.mock.calls.length, 0);
+});
+
+test('runIfMain skips startup when argvPath is absent', (t) => {
+  const start = t.mock.fn();
+
+  runIfMain({
+    moduleUrl: pathToFileURL(serverPath).href,
+    argvPath: null,
     start
   });
 

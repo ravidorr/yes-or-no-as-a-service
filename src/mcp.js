@@ -2,8 +2,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { isExecutedModule } from './run-if-main.js';
 import packageJson from '../package.json' with { type: 'json' };
 import { NO_RESPONSE, YES_RESPONSE } from './responses.js';
 
@@ -76,7 +75,7 @@ export function runIfMain({
   argvPath = process.argv[1],
   start = runMcpServerCli
 } = {}) {
-  if (moduleUrl === pathToFileURL(resolve(argvPath)).href) {
+  if (isExecutedModule(moduleUrl, argvPath)) {
     start();
   }
 }

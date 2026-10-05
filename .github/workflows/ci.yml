@@ -66,6 +66,47 @@ jobs:
       - name: Run linters
         run: npm run lint
 
+  package:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Smoke-test npm pack tarball
+        run: npm run test:package
+
+  e2e:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run browser UI tests
+        run: npm run test:e2e
+
   smoke:
     runs-on: ubuntu-latest
 
@@ -85,21 +126,14 @@ jobs:
       - name: Build Docker image
         run: docker build -t yornaas:ci .
 
-      - name: Start service and smoke-test public endpoints
+      - name: Smoke-test the built container image
         run: |
-          node src/server.js > server.log 2>&1 &
-          server_pid=$!
-
           cleanup() {
-            kill -TERM "$server_pid" 2>/dev/null || true
-            for _ in {1..30}; do
-              kill -0 "$server_pid" 2>/dev/null || break
-              sleep 0.1
-            done
-            kill -9 "$server_pid" 2>/dev/null || true
-            wait "$server_pid" 2>/dev/null || true
+            docker rm -f yornaas-ci yornaas-ci-alt >/dev/null 2>&1 || true
           }
           trap cleanup EXIT
+
+          docker run -d --rm --name yornaas-ci -p 3000:3000 yornaas:ci
 
           for attempt in {1..20}; do
             if curl --fail --silent --max-time 5 --output /dev/null http://127.0.0.1:3000/health; then
@@ -107,7 +141,7 @@ jobs:
             fi
 
             if [ "$attempt" -eq 20 ]; then
-              cat server.log
+              docker logs yornaas-ci
               exit 1
             fi
 
@@ -156,3 +190,21 @@ jobs:
           unknown_status="$(curl --silent --show-error --max-time 5 --output unknown.txt --write-out '%{http_code}' http://127.0.0.1:3000/unknown-path)"
           [ "$unknown_status" = "404" ]
           grep -q 'Use /api/yes or /api/no' unknown.txt
+
+          docker run -d --rm --name yornaas-ci-alt -e PORT=8080 -p 8080:8080 yornaas:ci
+
+          for attempt in {1..20}; do
+            if curl --fail --silent --max-time 5 --output /dev/null http://127.0.0.1:8080/health; then
+              break
+            fi
+
+            if [ "$attempt" -eq 20 ]; then
+              docker logs yornaas-ci-alt
+              exit 1
+            fi
+
+            sleep 0.5
+          done
+
+          docker stop yornaas-ci >/dev/null
+          docker wait yornaas-ci >/dev/null

@@ -67,7 +67,7 @@ Coverage requirements:
 
 Protected `main` requires:
 
-- passing `test` and `release-notes` checks
+- passing `test`, `release-notes`, `lint`, `smoke`, `package`, and `e2e` checks
 - at least one approving review
 - resolved review conversations
 
@@ -80,8 +80,23 @@ long-lived `NPM_TOKEN` secret is required.
 
 Before the first automated publish, maintainers must:
 
-1. Publish once from a trusted machine with `npm login` and `npm publish --access public` (see README).
-2. On npm, open `@ravidor/yornaas` → **Settings** → **Trusted Publisher** →
+1. Authenticate to npm and confirm the account owns the `@ravidor` scope:
+
+   ```sh
+   npm login
+   npm whoami
+   ```
+
+2. Publish once from a trusted machine after the release gates pass locally:
+
+   ```sh
+   npm run lint
+   npm run test:coverage
+   npm publish --access public --provenance
+   npm view @ravidor/yornaas version
+   ```
+
+3. On npm, open `@ravidor/yornaas` → **Settings** → **Trusted Publisher** →
    **GitHub Actions** and link `ravidorr/yes-or-no-as-a-service` with workflow
    file `release.yml`.
 
