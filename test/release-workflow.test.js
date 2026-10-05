@@ -20,7 +20,8 @@ test('Release job publishes the production image to GHCR on version bump', () =>
   assert.ok(releaseSteps.includes('Build and push container image'));
   assert.ok(releaseSteps.includes('Publish to npm'));
   assert.ok(releaseSteps.includes('Create GitHub release'));
-  assert.equal(publishStep.run, 'npm publish --access public --provenance');
+  assert.match(publishStep.run, /npm publish --access public --provenance/);
+  assert.match(publishStep.run, /already on npm; skipping publish/);
 
   const buildPushIndex = releaseSteps.indexOf('Build and push container image');
   const npmPublishIndex = releaseSteps.indexOf('Publish to npm');

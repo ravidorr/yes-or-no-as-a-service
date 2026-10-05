@@ -88,7 +88,9 @@ Before the first automated publish, maintainers must:
    npm whoami
    ```
 
-2. Publish once from a trusted machine after the release gates pass locally:
+2. Publish once from a trusted machine after the release gates pass locally.
+   This bootstrap publish uses the exact version in `package.json` and only
+   needs to happen once for the new package name:
 
    ```sh
    npm run lint
@@ -100,6 +102,10 @@ Before the first automated publish, maintainers must:
 3. On npm, open `@ravidor/yesornoaas` → **Settings** → **Trusted Publisher** →
    **GitHub Actions** and link `ravidorr/yes-or-no-as-a-service` with workflow
    file `release.yml`.
+
+When that same version later merges to `main`, the release workflow skips npm
+publish if the version is already on the registry and still creates the GitHub
+release and container image.
 
 To smoke-test the publish tarball locally before a release:
 

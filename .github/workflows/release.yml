@@ -89,7 +89,14 @@ jobs:
           labels: ${{ steps.container_meta.outputs.labels }}
 
       - name: Publish to npm
-        run: npm publish --access public --provenance
+        env:
+          PACKAGE_VERSION: ${{ needs.detect.outputs.version }}
+        run: |
+          if npm view "@ravidor/yesornoaas@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "Version ${PACKAGE_VERSION} is already on npm; skipping publish."
+          else
+            npm publish --access public --provenance
+          fi
 
       - name: Create GitHub release
         env:

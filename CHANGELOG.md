@@ -6,10 +6,6 @@
 - Rename npm package to `@ravidor/yesornoaas` with `yesornoaas` and
   `yesornoaas-mcp` binaries.
 - Rename HTTP metrics prefix to `yesornoaas_http_*`.
-- Refresh web UI headings, form label, and replay links below the share section.
-
-## 1.1.0 - 2026-10-05
-
 - Add `/api/random`, `/random`, `yesornoaas random`, and MCP tool `random` that
   return a randomly selected `Yes!` or `No!`.
 - Preserve deterministic `/api/yes`, `/api/no`, `yesornoaas yes|no`, and MCP
@@ -18,6 +14,7 @@
   on each open.
 - Extend metrics route labels with `api_random` and `web_random`.
 - Update OpenAPI, README, and route hints for the random interface.
+- Refresh web UI headings, form label, and replay links below the share section.
 
 ## 1.0.3 - 2026-10-05
 
@@ -45,16 +42,16 @@
 
 ## 1.0.0 - 2026-10-05
 
-- Launch YESorNOaaS (Yes or No as a Service) combining yes and no answer routes.
+- Launch YorNaaS (Yes or No as a Service) combining yes and no answer routes.
 - Add `/api/yes` returning `Yes!` and keep `/api/no` returning `No!`.
 - Return `404 text/plain` with a route hint for unknown paths; rate-limited
   requests return `429` with the same hint.
-- Rename package to `@ravidor/yesornoaas` with `yesornoaas` and `yesornoaas-mcp` binaries.
-- Add MCP `yes` and `no` tools on server `yesornoaas`.
-- Update CLI to `yesornoaas yes` and `yesornoaas no` subcommands.
-- Rename HTTP metrics prefix to `yesornoaas_http_*` with `api_yes`, `api_no`, and
+- Rename package to `@ravidor/yornaas` with `yornaas` and `yornaas-mcp` binaries.
+- Add MCP `yes` and `no` tools on server `yornaas`.
+- Update CLI to `yornaas yes` and `yornaas no` subcommands.
+- Rename HTTP metrics prefix to `yornaas_http_*` with `api_yes`, `api_no`, and
   `not_found` route labels.
-- Update web UI with yes/no answer mode, share links, and YESorNOaaS branding.
+- Update web UI with yes/no answer mode, share links, and YorNaaS branding.
 - Replace `src/no.js` with `src/responses.js` for shared constants.
 
 ## 0.6.2 - 2026-10-01
