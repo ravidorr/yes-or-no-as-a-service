@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.0.0 - 2026-10-05
+
+- Rebrand YorNaaS to YESorNOaaS across the API, CLI, MCP server, docs, and web UI.
+- Rename npm package to `@ravidor/yesornoaas` with `yesornoaas` and
+  `yesornoaas-mcp` binaries.
+- Rename HTTP metrics prefix to `yesornoaas_http_*`.
+- Add `/api/random`, `/random`, `yesornoaas random`, and MCP tool `random` that
+  return a randomly selected `Yes!` or `No!`.
+- Preserve deterministic `/api/yes`, `/api/no`, `yesornoaas yes|no`, and MCP
+  `yes`/`no` behavior.
+- Send `Cache-Control: no-store` on random API responses so shared links reroll
+  on each open.
+- Extend metrics route labels with `api_random` and `web_random`.
+- Update OpenAPI, README, and route hints for the random interface.
+- Refresh web UI headings, form label, and replay links below the share section.
+
 ## 1.0.3 - 2026-10-05
 
 - Reuse an existing local dev server for Playwright when port 3000 is already in use.

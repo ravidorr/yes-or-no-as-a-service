@@ -55,6 +55,24 @@ body {
   margin-bottom: 24px;
 }
 
+.mode-nav {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.mode-nav a {
+  color: var(--focus);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.mode-nav a:hover,
+.mode-nav a:focus-visible {
+  text-decoration: underline;
+}
+
 h1 {
   margin: 0;
   font-size: 2rem;

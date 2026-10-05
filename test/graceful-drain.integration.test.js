@@ -43,7 +43,7 @@ test('graceful drain returns 503 from health before exiting cleanly', async () =
 
   const readyResponse = await fetch(healthUrl);
   assert.equal(readyResponse.status, 200);
-  assert.deepEqual(await readyResponse.json(), { status: 'YorNaaS', version: packageInfo.version });
+  assert.deepEqual(await readyResponse.json(), { status: 'YESorNOaaS', version: packageInfo.version });
 
   child.kill('SIGTERM');
 
@@ -68,7 +68,7 @@ test('graceful drain returns 503 from health before exiting cleanly', async () =
   });
 
   assert.equal(drainingResponse.status, 503);
-  assert.deepEqual(await drainingResponse.json(), { status: 'YorNaaS', version: packageInfo.version });
+  assert.deepEqual(await drainingResponse.json(), { status: 'YESorNOaaS', version: packageInfo.version });
 
   const exitCode = await new Promise((resolvePromise) => {
     child.on('close', resolvePromise);

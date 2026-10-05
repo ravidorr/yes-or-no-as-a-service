@@ -1,7 +1,7 @@
 {
-  "name": "@ravidor/yornaas",
-  "version": "1.0.3",
-  "description": "Yes or No as a Service: call /api/yes or /api/no for Yes! or No!",
+  "name": "@ravidor/yesornoaas",
+  "version": "2.0.0",
+  "description": "Yes or No as a Service: call /api/yes, /api/no, or /api/random for Yes! or No!",
   "license": "MIT",
   "type": "module",
   "main": "src/server.js",
@@ -14,7 +14,7 @@
   },
   "homepage": "https://github.com/ravidorr/yes-or-no-as-a-service#readme",
   "keywords": [
-    "yornaas",
+    "yesornoaas",
     "yaas",
     "naas",
     "yes",
@@ -34,8 +34,8 @@
     "access": "public"
   },
   "bin": {
-    "yornaas": "src/cli.js",
-    "yornaas-mcp": "src/mcp.js"
+    "yesornoaas": "src/cli.js",
+    "yesornoaas-mcp": "src/mcp.js"
   },
   "scripts": {
     "mcp": "node src/mcp.js",

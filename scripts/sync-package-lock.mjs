@@ -25,7 +25,7 @@ export function generatePackageLockFromManifest(
   manifestContents,
   { execSyncImpl = execSync } = {}
 ) {
-  const tempDir = mkdtempSync(join(tmpdir(), 'yornaas-lock-sync-'));
+  const tempDir = mkdtempSync(join(tmpdir(), 'yesornoaas-lock-sync-'));
 
   try {
     writeFileSync(join(tempDir, 'package.json'), manifestContents);

@@ -8,8 +8,12 @@ export function buildShareUrl(baseHref, text, answer = 'yes') {
 }
 
 export function buildShareText(text, answer = 'yes') {
+  if (answer === 'random') {
+    return `YESorNOaaS will randomly answer: ${text}`;
+  }
+
   const verb = answer === 'no' ? 'no' : 'yes';
-  return `YorNaaS says ${verb} to: ${text}`;
+  return `YESorNOaaS says ${verb} to: ${text}`;
 }
 
 export function buildSocialShareLinks(baseHref, text, answer = 'yes') {
@@ -24,7 +28,7 @@ export function buildSocialShareLinks(baseHref, text, answer = 'yes') {
     x: `https://twitter.com/intent/tweet?text=${encodedText}&url=${encodedUrl}`,
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodedUrl}`,
     linkedIn: `https://www.linkedin.com/sharing/share-offsite/?url=${encodedUrl}`,
-    email: `mailto:?subject=${encodeURIComponent('YorNaaS link')}&body=${encodedEmailBody}`,
+    email: `mailto:?subject=${encodeURIComponent('YESorNOaaS link')}&body=${encodedEmailBody}`,
     whatsApp: `https://wa.me/?text=${encodeURIComponent(`${shareText} ${url}`)}`
   };
 }

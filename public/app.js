@@ -6,7 +6,7 @@ import {
 } from './app-behavior.js';
 import { buildShareUrl, buildSocialShareLinks } from './share-utils.js';
 
-const form = document.querySelector('#yornaas-form');
+const form = document.querySelector('#yesornoaas-form');
 const input = document.querySelector('#request-text');
 const submitButton = document.querySelector('#submit-button');
 const statusRow = document.querySelector('#status-row');
@@ -23,7 +23,19 @@ const shareStatus = document.querySelector('#share-status');
 const loading = document.querySelector('#loading');
 const status = document.querySelector('#status');
 const responseOutput = document.querySelector('#response');
-const answer = document.body.dataset.answer === 'no' ? 'no' : 'yes';
+function resolveAnswerMode(datasetAnswer) {
+  if (datasetAnswer === 'no') {
+    return 'no';
+  }
+
+  if (datasetAnswer === 'random') {
+    return 'random';
+  }
+
+  return 'yes';
+}
+
+const answer = resolveAnswerMode(document.body.dataset.answer);
 let currentController = null;
 let isLoading = false;
 let requestToken = 0;
@@ -222,8 +234,8 @@ form.addEventListener('submit', async (event) => {
       currentController = controller;
     },
     onSuccess: showResult,
-    onTimeout: () => showError('YorNaaS timed out. Try again.'),
-    onUnavailable: () => showError('YorNaaS is unavailable. Try again.')
+    onTimeout: () => showError('YESorNOaaS timed out. Try again.'),
+    onUnavailable: () => showError('YESorNOaaS is unavailable. Try again.')
   });
 
   if (token === requestToken) {

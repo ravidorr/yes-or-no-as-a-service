@@ -1,7 +1,5 @@
 import assert from 'node:assert/strict';
-import { symlinkSync, unlinkSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { resolve } from 'node:path';
 import { test } from 'node:test';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
@@ -10,6 +8,7 @@ import { pathToFileURL } from 'node:url';
 import {
   createDefaultExitHandler,
   createMcpServer,
+  createRandomToolHandler,
   exitWithCode,
   runIfMain,
   runMcpServer,
@@ -18,9 +17,9 @@ import {
 
 const mcpServerPath = resolve('src/mcp.js');
 
-test('MCP server exposes yes and no tools', async () => {
+test('MCP server exposes yes, no, and random tools', async () => {
   const client = new Client({
-    name: 'yornaas-test-client',
+    name: 'yesornoaas-test-client',
     version: '0.0.0'
   });
   const transport = new StdioClientTransport({
@@ -34,14 +33,14 @@ test('MCP server exposes yes and no tools', async () => {
     await client.connect(transport);
 
     assert.deepEqual(client.getServerVersion(), {
-      name: 'yornaas',
+      name: 'yesornoaas',
       version: packageJson.version
     });
 
     const tools = await client.listTools();
     assert.deepEqual(
       tools.tools.map((tool) => tool.name),
-      ['yes', 'no']
+      ['yes', 'no', 'random']
     );
 
     const yesResult = await client.callTool({
@@ -63,9 +62,31 @@ test('MCP server exposes yes and no tools', async () => {
     });
 
     assert.deepEqual(noResult.content, [{ type: 'text', text: 'No!' }]);
+
+    const randomResult = await client.callTool({
+      name: 'random',
+      arguments: {
+        question: 'Can I?'
+      }
+    });
+
+    assert.ok(randomResult.content?.[0]?.type === 'text');
+    assert.ok(['Yes!', 'No!'].includes(randomResult.content?.[0]?.text));
   } finally {
     await client.close();
   }
+});
+
+test('createRandomToolHandler returns Yes! with an injected source', async () => {
+  const result = await createRandomToolHandler(() => 0)();
+
+  assert.deepEqual(result.content, [{ type: 'text', text: 'Yes!' }]);
+});
+
+test('createRandomToolHandler returns No! with an injected source', async () => {
+  const result = await createRandomToolHandler(() => 0.5)();
+
+  assert.deepEqual(result.content, [{ type: 'text', text: 'No!' }]);
 });
 
 test('runMcpServer connects using the provided transport factory', async () => {
@@ -149,21 +170,4 @@ test('runIfMain skips MCP startup when imported as a dependency', (t) => {
   });
 
   assert.equal(start.mock.calls.length, 0);
-});
-
-test('runIfMain starts the MCP CLI when executed via a symlink', (t) => {
-  const start = t.mock.fn();
-  const linkPath = join(tmpdir(), `yornaas-mcp-link-${process.pid}.js`);
-
-  try {
-    symlinkSync(mcpServerPath, linkPath);
-    runIfMain({
-      moduleUrl: pathToFileURL(mcpServerPath).href,
-      argvPath: linkPath,
-      start
-    });
-    assert.equal(start.mock.calls.length, 1);
-  } finally {
-    unlinkSync(linkPath);
-  }
 });

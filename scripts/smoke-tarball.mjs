@@ -35,7 +35,7 @@ function run(command, args, options = {}) {
   });
 }
 
-const tempDir = mkdtempSync(join(tmpdir(), 'yornaas-pack-'));
+const tempDir = mkdtempSync(join(tmpdir(), 'yesornoaas-pack-'));
 const prefixDir = join(tempDir, 'prefix');
 
 try {
@@ -47,14 +47,17 @@ try {
 
   await run('npm', ['install', '-g', join(process.cwd(), tarballName), '--prefix', prefixDir]);
 
-  const yesOutput = await run(join(prefixDir, 'bin', 'yornaas'), ['yes']);
+  const yesOutput = await run(join(prefixDir, 'bin', 'yesornoaas'), ['yes']);
   assert.equal(yesOutput.stdout.trim(), 'Yes!');
 
-  const noOutput = await run(join(prefixDir, 'bin', 'yornaas'), ['no']);
+  const noOutput = await run(join(prefixDir, 'bin', 'yesornoaas'), ['no']);
   assert.equal(noOutput.stdout.trim(), 'No!');
 
-  const mcpPath = join(prefixDir, 'bin', 'yornaas-mcp');
-  const client = new Client({ name: 'yornaas-pack-smoke', version: '0.0.0' });
+  const randomOutput = await run(join(prefixDir, 'bin', 'yesornoaas'), ['random']);
+  assert.match(randomOutput.stdout.trim(), /^(Yes!|No!)$/);
+
+  const mcpPath = join(prefixDir, 'bin', 'yesornoaas-mcp');
+  const client = new Client({ name: 'yesornoaas-pack-smoke', version: '0.0.0' });
   const transport = new StdioClientTransport({
     command: mcpPath,
     cwd: process.cwd(),
@@ -65,12 +68,12 @@ try {
   const tools = await client.listTools();
   assert.deepEqual(
     tools.tools.map((tool) => tool.name),
-    ['yes', 'no']
+    ['yes', 'no', 'random']
   );
   await client.close();
 
   const packageJson = JSON.parse(readFileSync(resolve('package.json'), 'utf8'));
-  assert.equal(packageJson.name, '@ravidor/yornaas');
+  assert.equal(packageJson.name, '@ravidor/yesornoaas');
 } finally {
   rmSync(tempDir, { recursive: true, force: true });
 }

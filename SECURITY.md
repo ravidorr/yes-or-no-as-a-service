@@ -28,7 +28,7 @@ Maintainers will acknowledge valid reports as soon as possible and work on a fix
 
 ## Scope notes
 
-YorNaaS is a small service that returns plain text yes or no responses. Reports about intentional behavior such as "answer routes always return `Yes!` or `No!`" are out of scope unless they expose an unintended security issue.
+YESorNOaaS is a small service that returns plain text yes or no responses. Reports about intentional behavior such as "answer routes always return `Yes!` or `No!`" are out of scope unless they expose an unintended security issue.
 
 ## Deployment guidance
 
@@ -39,7 +39,7 @@ such as CPU, memory, heap, garbage collection, and HTTP traffic patterns. That
 is appropriate for internal Prometheus scraping, but risky on the public internet
 without network controls.
 
-When exposing YorNaaS beyond a trusted network:
+When exposing YESorNOaaS beyond a trusted network:
 
 - Bind the service to an internal interface or private network.
 - Restrict `/metrics` at a reverse proxy or ingress (ACL, IP allowlist, or

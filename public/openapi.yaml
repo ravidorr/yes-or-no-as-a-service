@@ -1,14 +1,15 @@
 openapi: 3.1.1
 info:
-  title: YorNaaS API
-  version: 1.0.3
+  title: YESorNOaaS API
+  version: 2.0.0
   description: |
-    Call `/api/yes` for `Yes!` or `/api/no` for `No!`.
+    Call `/api/yes` for `Yes!`, `/api/no` for `No!`, or `/api/random` for a
+    random `Yes!` or `No!`.
     Static assets, `GET /version`, `GET /health`, and `GET /metrics` are served
     outside the answer routes. Legacy root share URLs with a `request` query
-    parameter redirect to `/yes` or `/no`. Other unmatched paths return
-    `404 text/plain` with a hint. Rate-limited requests return `429 text/plain`
-    with the same hint.
+    parameter redirect to `/yes`, `/no`, or `/random`. Other unmatched paths
+    return `404 text/plain` with a hint. Rate-limited requests return
+    `429 text/plain` with the same hint.
 paths:
   /:
     get:
@@ -24,7 +25,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: [yes, no]
+            enum: [yes, no, random]
       responses:
         '308':
           description: Redirect to the matching answer page
@@ -38,7 +39,7 @@ paths:
             text/plain:
               schema:
                 type: string
-                const: 'Use /api/yes or /api/no. Example: GET /api/yes -> Yes!'
+                const: 'Use /api/yes, /api/no, or /api/random. Example: GET /api/yes -> Yes!'
   /version:
     get:
       summary: Return the package version as plain text
@@ -54,7 +55,7 @@ paths:
       summary: Return service health and package version
       responses:
         '200':
-          description: YorNaaS health status
+          description: YESorNOaaS health status
           content:
             application/json:
               schema:
@@ -177,6 +178,60 @@ paths:
           $ref: '#/components/responses/NoResponse'
         '429':
           $ref: '#/components/responses/ThrottledResponse'
+  /api/random:
+    get:
+      responses:
+        '200':
+          $ref: '#/components/responses/RandomResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    put:
+      responses:
+        '200':
+          $ref: '#/components/responses/RandomResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    post:
+      responses:
+        '200':
+          $ref: '#/components/responses/RandomResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    delete:
+      responses:
+        '200':
+          $ref: '#/components/responses/RandomResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    options:
+      responses:
+        '200':
+          $ref: '#/components/responses/RandomResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    head:
+      responses:
+        '200':
+          description: No response body
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    patch:
+      responses:
+        '200':
+          $ref: '#/components/responses/RandomResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    trace:
+      responses:
+        '200':
+          $ref: '#/components/responses/RandomResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
 components:
   schemas:
     HealthResponse:
@@ -185,30 +240,45 @@ components:
       properties:
         status:
           type: string
-          const: YorNaaS
+          const: YESorNOaaS
         version:
           type: string
   responses:
     YesResponse:
-      description: YorNaaS yes answer
+      description: YESorNOaaS yes answer
       content:
         text/plain:
           schema:
             type: string
             const: Yes!
     NoResponse:
-      description: YorNaaS no answer
+      description: YESorNOaaS no answer
       content:
         text/plain:
           schema:
             type: string
             const: No!
+    RandomResponse:
+      description: YESorNOaaS random yes or no answer
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            const: no-store
+      content:
+        text/plain:
+          schema:
+            oneOf:
+              - type: string
+                const: Yes!
+              - type: string
+                const: No!
     ThrottledResponse:
       description: Rate limit exceeded
       content:
         text/plain:
           schema:
             type: string
-            const: 'Use /api/yes or /api/no. Example: GET /api/yes -> Yes!'
-x-yornaas-unknown-routes:
+            const: 'Use /api/yes, /api/no, or /api/random. Example: GET /api/yes -> Yes!'
+x-yesornoaas-unknown-routes:
   description: Unmatched request paths, except legacy root share redirects, return `404 text/plain` with a hint until throttled, then `429 text/plain` with the same hint.

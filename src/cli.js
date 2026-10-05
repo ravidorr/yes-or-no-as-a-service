@@ -1,16 +1,52 @@
 #!/usr/bin/env node
 
-import { NO_RESPONSE, YES_RESPONSE } from './responses.js';
+import { isExecutedModule } from './run-if-main.js';
+import {
+  DEFAULT_RANDOM_NUMBER_SOURCE,
+  NO_RESPONSE,
+  selectRandomAnswer,
+  YES_RESPONSE
+} from './responses.js';
 
-const USAGE = 'Usage: yornaas <yes|no>\n';
+export const USAGE = 'Usage: yesornoaas <yes|no|random>\n';
 
-const command = process.argv[2];
+export function runCli({
+  argv = process.argv,
+  stdout = process.stdout,
+  stderr = process.stderr,
+  exit = process.exit.bind(process),
+  randomNumberSource = DEFAULT_RANDOM_NUMBER_SOURCE
+} = {}) {
+  const command = argv[2];
 
-if (command === 'yes') {
-  process.stdout.write(`${YES_RESPONSE}\n`);
-} else if (command === 'no') {
-  process.stdout.write(`${NO_RESPONSE}\n`);
-} else {
-  process.stderr.write(USAGE);
-  process.exit(1);
+  if (command === 'yes') {
+    stdout.write(`${YES_RESPONSE}\n`);
+    return 0;
+  }
+
+  if (command === 'no') {
+    stdout.write(`${NO_RESPONSE}\n`);
+    return 0;
+  }
+
+  if (command === 'random') {
+    stdout.write(`${selectRandomAnswer(randomNumberSource)}\n`);
+    return 0;
+  }
+
+  stderr.write(USAGE);
+  exit(1);
+  return 1;
 }
+
+export function runIfMain({
+  moduleUrl = import.meta.url,
+  argvPath = process.argv[1],
+  start = runCli
+} = {}) {
+  if (isExecutedModule(moduleUrl, argvPath)) {
+    start();
+  }
+}
+
+runIfMain();

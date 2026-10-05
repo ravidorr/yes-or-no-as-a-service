@@ -1,12 +1,13 @@
-# YorNaaS
+# YESorNOaaS
 
 Yes or No as a Service.
 
 Call the answer routes:
 
 ```sh
-curl http://localhost:3000/api/yes   # Yes!
-curl http://localhost:3000/api/no    # No!
+curl http://localhost:3000/api/yes     # Yes!
+curl http://localhost:3000/api/no      # No!
+curl http://localhost:3000/api/random  # Yes! or No!
 ```
 
 Unknown paths return `404 text/plain` with a hint. Rate-limited requests return
@@ -22,8 +23,8 @@ Unknown paths return `404 text/plain` with a hint. Rate-limited requests return
 Install globally from npm:
 
 ```sh
-npm install -g @ravidor/yornaas
-npm view @ravidor/yornaas version
+npm install -g @ravidor/yesornoaas
+npm view @ravidor/yesornoaas version
 ```
 
 The first npm release must be published manually by a maintainer with access to
@@ -46,12 +47,15 @@ npm start
 
 The API listens on `http://localhost:3000` by default.
 
-The yes UI is at `http://localhost:3000/yes` and the no UI is at
-`http://localhost:3000/no`. The root path returns `404` with the route hint.
-Use `?request=` on either page to open a shareable YorNaaS flow that types and
-submits the request automatically. Long shared requests are entered immediately
-instead of being animated character by character. Legacy root share URLs redirect
-to the matching page, defaulting to `/no` when no answer is specified.
+The yes UI is at `http://localhost:3000/yes`, the no UI is at
+`http://localhost:3000/no`, and the random UI is at
+`http://localhost:3000/random`. The root path returns `404` with the route hint.
+Use `?request=` on any answer page to open a shareable YESorNOaaS flow that types
+and submits the request automatically. Long shared requests are entered
+immediately instead of being animated character by character. Legacy root share
+URLs redirect to the matching page, defaulting to `/no` when no answer is
+specified. Shared random links reroll on each open and display the selected
+`Yes!` or `No!`.
 
 Health check:
 
@@ -62,7 +66,7 @@ curl http://localhost:3000/health
 Output:
 
 ```json
-{"status":"YorNaaS","version":"1.0.2"}
+{"status":"YESorNOaaS","version":"1.0.2"}
 ```
 
 Prometheus metrics:
@@ -77,13 +81,13 @@ graceful shutdown.
 
 Custom HTTP metrics:
 
-- `yornaas_http_requests_total{route,method,status_code}`
-- `yornaas_http_request_duration_seconds{route,method,status_code}`
-- `yornaas_http_requests_in_flight{route,method}`
+- `yesornoaas_http_requests_total{route,method,status_code}`
+- `yesornoaas_http_request_duration_seconds{route,method,status_code}`
+- `yesornoaas_http_requests_in_flight{route,method}`
 
 Route labels are normalized to `version`, `health`, `metrics`, `api_yes`,
-`api_no`, `web_yes`, `web_no`, or `not_found`. Scrape traffic to `/metrics` is
-not counted in the custom HTTP metrics.
+`api_no`, `api_random`, `web_yes`, `web_no`, `web_random`, or `not_found`.
+Scrape traffic to `/metrics` is not counted in the custom HTTP metrics.
 
 Standard Node.js process and runtime metrics (CPU, memory, event loop, GC) are
 also included.
@@ -111,9 +115,9 @@ Use a different port:
 PORT=8080 npm start
 ```
 
-Rate limiting applies to `/api/yes`, `/api/no`, and unknown routes. Static
-assets, `GET /health`, and `GET /metrics` are exempt. Throttled requests return
-`429` with the route hint.
+Rate limiting applies to `/api/yes`, `/api/no`, `/api/random`, and unknown
+routes. Static assets, `GET /health`, and `GET /metrics` are exempt.
+Throttled requests return `429` with the route hint.
 
 Configure the limit with environment variables:
 
@@ -150,8 +154,8 @@ SHUTDOWN_TIMEOUT_MS=30000 SHUTDOWN_READINESS_GRACE_MS=1000 npm start
 Build the image locally:
 
 ```sh
-docker build -t yornaas .
-docker run --rm -p 3000:3000 yornaas
+docker build -t yesornoaas .
+docker run --rm -p 3000:3000 yesornoaas
 ```
 
 Pull the published release image from GHCR:
@@ -170,7 +174,7 @@ curl http://localhost:3000/health
 Use a different port:
 
 ```sh
-docker run --rm -e PORT=8080 -p 8080:8080 yornaas
+docker run --rm -e PORT=8080 -p 8080:8080 yesornoaas
 ```
 
 ## CLI
@@ -178,15 +182,16 @@ docker run --rm -e PORT=8080 -p 8080:8080 yornaas
 After a global install:
 
 ```sh
-yornaas yes
-yornaas no
+yesornoaas yes
+yesornoaas no
+yesornoaas random
 ```
 
 For local development:
 
 ```sh
 npm link
-yornaas yes
+yesornoaas yes
 ```
 
 Output:
@@ -206,13 +211,14 @@ npm run mcp
 After a global install or `npm link`, MCP clients can use:
 
 ```sh
-yornaas-mcp
+yesornoaas-mcp
 ```
 
-It exposes two tools:
+It exposes three tools:
 
 - `yes`: returns `Yes!`
 - `no`: returns `No!`
+- `random`: returns `Yes!` or `No!`
 
 ## Test
 

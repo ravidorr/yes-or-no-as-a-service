@@ -16,7 +16,7 @@ test('isExecutedModule matches the executed module path', () => {
 });
 
 test('isExecutedModule matches when argvPath is a symlink to the module', () => {
-  const linkPath = join(tmpdir(), `yornaas-run-if-main-${process.pid}.js`);
+  const linkPath = join(tmpdir(), `yesornoaas-run-if-main-${process.pid}.js`);
 
   try {
     symlinkSync(modulePath, linkPath);
@@ -39,7 +39,7 @@ test('isExecutedModule rejects imported modules and missing argv paths', () => {
 });
 
 test('isExecutedModule falls back to href comparison when realpath fails', () => {
-  const missingPath = join(tmpdir(), `missing-yornaas-${process.pid}.js`);
+  const missingPath = join(tmpdir(), `missing-yesornoaas-${process.pid}.js`);
 
   assert.equal(
     isExecutedModule(pathToFileURL(missingPath).href, missingPath),
