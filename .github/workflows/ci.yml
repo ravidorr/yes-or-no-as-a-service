@@ -1,0 +1,146 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  release-notes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Verify version and changelog on pull request
+        if: github.event_name == 'pull_request'
+        run: node scripts/verify-release-notes.mjs --base origin/${{ github.base_ref }}
+
+      - name: Verify version and changelog on push
+        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
+        run: node scripts/verify-release-notes.mjs --base ${{ github.event.before }}
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with 100% coverage
+        run: npm run test:coverage
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linters
+        run: npm run lint
+
+  smoke:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Docker image
+        run: docker build -t yornaas:ci .
+
+      - name: Start service and smoke-test public endpoints
+        run: |
+          node src/server.js > server.log 2>&1 &
+          server_pid=$!
+
+          cleanup() {
+            kill -TERM "$server_pid" 2>/dev/null || true
+            for _ in {1..30}; do
+              kill -0 "$server_pid" 2>/dev/null || break
+              sleep 0.1
+            done
+            kill -9 "$server_pid" 2>/dev/null || true
+            wait "$server_pid" 2>/dev/null || true
+          }
+          trap cleanup EXIT
+
+          for attempt in {1..20}; do
+            if curl --fail --silent --max-time 5 --output /dev/null http://127.0.0.1:3000/health; then
+              break
+            fi
+
+            if [ "$attempt" -eq 20 ]; then
+              cat server.log
+              exit 1
+            fi
+
+            sleep 0.5
+          done
+
+          expected_version="$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")"
+
+          api_yes_type="$(curl --fail --silent --show-error --max-time 5 --output api-yes.txt --write-out '%{content_type}' http://127.0.0.1:3000/api/yes)"
+          [ "$api_yes_type" = "text/plain; charset=utf-8" ]
+          [ "$(cat api-yes.txt)" = "Yes!" ]
+
+          api_no_type="$(curl --fail --silent --show-error --max-time 5 --output api-no.txt --write-out '%{content_type}' http://127.0.0.1:3000/api/no)"
+          [ "$api_no_type" = "text/plain; charset=utf-8" ]
+          [ "$(cat api-no.txt)" = "No!" ]
+
+          health_type="$(curl --fail --silent --show-error --max-time 5 --output health.json --write-out '%{content_type}' http://127.0.0.1:3000/health)"
+          [ "$health_type" = "application/json; charset=utf-8" ]
+          EXPECTED_VERSION="$expected_version" node -e '
+            const health = JSON.parse(require("node:fs").readFileSync("health.json", "utf8"));
+            if (health.status !== "YorNaaS" || health.version !== process.env.EXPECTED_VERSION) {
+              throw new Error(`Unexpected health response: ${JSON.stringify(health)}`);
+            }
+          '
+
+          version_type="$(curl --fail --silent --show-error --max-time 5 --output version.txt --write-out '%{content_type}' http://127.0.0.1:3000/version)"
+          [ "$version_type" = "text/plain; charset=utf-8" ]
+          [ "$(cat version.txt)" = "$expected_version" ]
+
+          metrics_type="$(curl --fail --silent --show-error --max-time 5 --output metrics.txt --write-out '%{content_type}' http://127.0.0.1:3000/metrics)"
+          [ "$metrics_type" = "text/plain; charset=utf-8; version=0.0.4" ]
+          grep -q 'yornaas_http_requests_total' metrics.txt
+
+          unknown_status="$(curl --silent --show-error --max-time 5 --output unknown.txt --write-out '%{http_code}' http://127.0.0.1:3000/unknown-path)"
+          [ "$unknown_status" = "404" ]
+          grep -q 'Use /api/yes or /api/no' unknown.txt

@@ -1,0 +1,183 @@
+openapi: 3.1.1
+info:
+  title: YorNaaS API
+  version: 1.0.0
+  description: |
+    Call `/api/yes` for `Yes!` or `/api/no` for `No!`.
+    Static assets, `GET /version`, `GET /health`, and `GET /metrics` are served
+    outside the answer routes. Unmatched paths return `404 text/plain` with a hint.
+    Rate-limited requests return `429 text/plain` with the same hint.
+paths:
+  /version:
+    get:
+      summary: Return the package version as plain text
+      responses:
+        '200':
+          description: Package version
+          content:
+            text/plain:
+              schema:
+                type: string
+  /health:
+    get:
+      summary: Return service health and package version
+      responses:
+        '200':
+          description: YorNaaS health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+        '503':
+          description: Service is draining connections during shutdown
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+  /metrics:
+    get:
+      summary: Return Prometheus metrics for scraping
+      description: |
+        Exposes HTTP service metrics and standard Node.js runtime metrics in
+        Prometheus text format. Intended for Prometheus scraping. Exempt from
+        rate limiting.
+      responses:
+        '200':
+          description: Prometheus metrics exposition format
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/yes:
+    get:
+      responses:
+        '200':
+          $ref: '#/components/responses/YesResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    put:
+      responses:
+        '200':
+          $ref: '#/components/responses/YesResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    post:
+      responses:
+        '200':
+          $ref: '#/components/responses/YesResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    delete:
+      responses:
+        '200':
+          $ref: '#/components/responses/YesResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    options:
+      responses:
+        '200':
+          $ref: '#/components/responses/YesResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    head:
+      responses:
+        '200':
+          description: No response body
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    patch:
+      responses:
+        '200':
+          $ref: '#/components/responses/YesResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    trace:
+      responses:
+        '200':
+          $ref: '#/components/responses/YesResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+  /api/no:
+    get:
+      responses:
+        '200':
+          $ref: '#/components/responses/NoResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    put:
+      responses:
+        '200':
+          $ref: '#/components/responses/NoResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    post:
+      responses:
+        '200':
+          $ref: '#/components/responses/NoResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    delete:
+      responses:
+        '200':
+          $ref: '#/components/responses/NoResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    options:
+      responses:
+        '200':
+          $ref: '#/components/responses/NoResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    head:
+      responses:
+        '200':
+          description: No response body
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    patch:
+      responses:
+        '200':
+          $ref: '#/components/responses/NoResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+    trace:
+      responses:
+        '200':
+          $ref: '#/components/responses/NoResponse'
+        '429':
+          $ref: '#/components/responses/ThrottledResponse'
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status, version]
+      properties:
+        status:
+          type: string
+          const: YorNaaS
+        version:
+          type: string
+  responses:
+    YesResponse:
+      description: YorNaaS yes answer
+      content:
+        text/plain:
+          schema:
+            type: string
+            const: Yes!
+    NoResponse:
+      description: YorNaaS no answer
+      content:
+        text/plain:
+          schema:
+            type: string
+            const: No!
+    ThrottledResponse:
+      description: Rate limit exceeded
+      content:
+        text/plain:
+          schema:
+            type: string
+            const: Use /api/yes or /api/no. Example: GET /api/yes -> Yes!
+x-yornaas-unknown-routes:
+  description: Unmatched request paths return `404 text/plain` with a hint until throttled, then `429 text/plain` with the same hint.

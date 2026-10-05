@@ -1,0 +1,108 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      bumped: ${{ steps.detect.outputs.bumped }}
+      version: ${{ steps.detect.outputs.version }}
+      tag: ${{ steps.detect.outputs.tag }}
+      notes: ${{ steps.detect.outputs.notes }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Detect version bump
+        id: detect
+        env:
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+        run: node scripts/detect-version-bump.mjs
+
+  release:
+    needs: detect
+    if: needs.detect.outputs.bumped == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      packages: write
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with 100% coverage
+        run: npm run test:coverage
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Generate container metadata
+        id: container_meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=raw,value=${{ needs.detect.outputs.version }}
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.source=${{ github.repositoryUrl }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.version=${{ needs.detect.outputs.version }}
+
+      - name: Build and push container image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.container_meta.outputs.tags }}
+          labels: ${{ steps.container_meta.outputs.labels }}
+
+      - name: Publish to npm
+        run: npm publish --access public --provenance --ignore-scripts
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_NOTES: ${{ needs.detect.outputs.notes }}
+          RELEASE_TAG: ${{ needs.detect.outputs.tag }}
+        run: |
+          printf '%s\n' "$RELEASE_NOTES" > release-notes.md
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "Release $RELEASE_TAG already exists; skipping create."
+          else
+            gh release create "$RELEASE_TAG" \
+              --title "$RELEASE_TAG" \
+              --notes-file release-notes.md \
+              --target "${{ github.sha }}"
+          fi

@@ -1,0 +1,21 @@
+version: 2
+
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      npm-production:
+        patterns:
+          - '@modelcontextprotocol/*'
+          - express
+      npm-development:
+        dependency-type: development
+        patterns:
+          - '*'
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
