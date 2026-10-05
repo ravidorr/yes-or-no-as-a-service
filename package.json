@@ -34,8 +34,8 @@
     "access": "public"
   },
   "bin": {
-    "yornaas": "./src/cli.js",
-    "yornaas-mcp": "./src/mcp.js"
+    "yornaas": "src/cli.js",
+    "yornaas-mcp": "src/mcp.js"
   },
   "scripts": {
     "mcp": "node src/mcp.js",
