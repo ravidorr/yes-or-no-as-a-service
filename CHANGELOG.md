@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.0 - 2026-10-05
+
+- Replace the answer pages with a shared responsive template, persistent theme
+  toggle, loading and error states, replay links, and sharing controls.
+- Return a branded HTML 404 page for unmatched web, API, and non-GET requests.
+
 ## 2.0.0 - 2026-10-05
 
 - Rebrand YorNaaS to YESorNOaaS across the API, CLI, MCP server, docs, and web UI.
