@@ -128,25 +128,40 @@ jobs:
 
       - name: Smoke-test the built container image
         run: |
+          require_container() {
+            if ! docker ps --format '{{.Names}}' | grep -qx "$1"; then
+              echo "$1 is not running"
+              docker logs "$1" 2>&1 || true
+              exit 1
+            fi
+          }
+
+          wait_for_health() {
+            local url="$1"
+            local name="$2"
+
+            for attempt in {1..20}; do
+              if curl --fail --silent --max-time 5 --output /dev/null "$url"; then
+                return 0
+              fi
+
+              if [ "$attempt" -eq 20 ]; then
+                docker logs "$name"
+                exit 1
+              fi
+
+              sleep 0.5
+            done
+          }
+
           cleanup() {
             docker rm -f yornaas-ci yornaas-ci-alt >/dev/null 2>&1 || true
           }
           trap cleanup EXIT
 
-          docker run -d --rm --name yornaas-ci -p 3000:3000 yornaas:ci
-
-          for attempt in {1..20}; do
-            if curl --fail --silent --max-time 5 --output /dev/null http://127.0.0.1:3000/health; then
-              break
-            fi
-
-            if [ "$attempt" -eq 20 ]; then
-              docker logs yornaas-ci
-              exit 1
-            fi
-
-            sleep 0.5
-          done
+          docker run -d --name yornaas-ci -p 3000:3000 yornaas:ci
+          wait_for_health http://127.0.0.1:3000/health yornaas-ci
+          require_container yornaas-ci
 
           expected_version="$(node -p "JSON.parse(require('node:fs').readFileSync('package.json', 'utf8')).version")"
 
@@ -191,20 +206,15 @@ jobs:
           [ "$unknown_status" = "404" ]
           grep -q 'Use /api/yes or /api/no' unknown.txt
 
-          docker run -d --rm --name yornaas-ci-alt -e PORT=8080 -p 8080:8080 yornaas:ci
+          [ "$(docker exec yornaas-ci id -u)" != "0" ]
 
-          for attempt in {1..20}; do
-            if curl --fail --silent --max-time 5 --output /dev/null http://127.0.0.1:8080/health; then
-              break
-            fi
+          docker run -d --name yornaas-ci-alt -e PORT=8080 -p 8080:8080 yornaas:ci
+          wait_for_health http://127.0.0.1:8080/health yornaas-ci-alt
+          require_container yornaas-ci
+          require_container yornaas-ci-alt
 
-            if [ "$attempt" -eq 20 ]; then
-              docker logs yornaas-ci-alt
-              exit 1
-            fi
+          docker stop --time=30 yornaas-ci >/dev/null
+          [ "$(docker wait yornaas-ci)" -eq 0 ]
 
-            sleep 0.5
-          done
-
-          docker stop yornaas-ci >/dev/null
-          docker wait yornaas-ci >/dev/null
+          draining_status="$(curl --silent --show-error --max-time 5 --output /dev/null --write-out '%{http_code}' http://127.0.0.1:3000/health || true)"
+          [ "$draining_status" = "000" ] || [ "$draining_status" = "503" ]

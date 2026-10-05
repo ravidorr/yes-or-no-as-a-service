@@ -41,8 +41,10 @@ test('CI smoke job builds and runs the Docker image', () => {
   assert.ok(smokeSteps.includes('Smoke-test the built container image'));
   const buildStep = ciWorkflow.jobs.smoke.steps.find((step) => step.name === 'Build Docker image');
   assert.match(buildStep.run, /docker build -t yornaas:ci \./);
-  assert.match(smokeScript, /docker run -d --rm --name yornaas-ci -p 3000:3000 yornaas:ci/);
+  assert.match(smokeScript, /docker run -d --name yornaas-ci -p 3000:3000 yornaas:ci/);
   assert.doesNotMatch(smokeScript, /node src\/server\.js/);
-  assert.match(smokeScript, /docker run -d --rm --name yornaas-ci-alt -e PORT=8080 -p 8080:8080 yornaas:ci/);
-  assert.match(smokeScript, /docker stop yornaas-ci/);
+  assert.match(smokeScript, /docker run -d --name yornaas-ci-alt -e PORT=8080 -p 8080:8080 yornaas:ci/);
+  assert.match(smokeScript, /docker exec yornaas-ci id -u/);
+  assert.match(smokeScript, /docker stop --time=30 yornaas-ci/);
+  assert.match(smokeScript, /docker wait yornaas-ci/);
 });
