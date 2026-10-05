@@ -263,6 +263,23 @@ test('createApp rejects invalid configured rate limits at startup', () => {
   );
 });
 
+test('shares rate-limit quota across answer routes and unknown paths', async () => {
+  const { baseUrl, close } = await startServer(createApp({ rateLimitConfig: { windowMs: 60_000, max: 2 } }));
+
+  try {
+    const yesResponse = await fetch(`${baseUrl}/api/yes`);
+    const noResponse = await fetch(`${baseUrl}/api/no`);
+    const throttled = await fetch(`${baseUrl}/anything`);
+
+    assert.equal(yesResponse.status, 200);
+    assert.equal(noResponse.status, 200);
+    assert.equal(throttled.status, 429);
+    assert.equal(await throttled.text(), UNKNOWN_ROUTE_HINT);
+  } finally {
+    await close();
+  }
+});
+
 test('createApp rejects invalid environment configuration at startup', () => {
   const previousWindow = process.env.RATE_LIMIT_WINDOW_MS;
 

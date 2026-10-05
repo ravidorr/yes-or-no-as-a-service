@@ -1,6 +1,6 @@
 {
   "name": "@ravidor/yornaas",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Yes or No as a Service: call /api/yes or /api/no for Yes! or No!",
   "license": "MIT",
   "type": "module",
@@ -34,8 +34,8 @@
     "access": "public"
   },
   "bin": {
-    "yornaas": "./src/cli.js",
-    "yornaas-mcp": "./src/mcp.js"
+    "yornaas": "src/cli.js",
+    "yornaas-mcp": "src/mcp.js"
   },
   "scripts": {
     "mcp": "node src/mcp.js",
@@ -44,6 +44,8 @@
     "start": "node src/server.js",
     "test": "node --test",
     "test:coverage": "node scripts/run-coverage.mjs",
+    "test:e2e": "playwright test",
+    "test:package": "node scripts/smoke-tarball.mjs",
     "lint": "npm run lint:js && npm run lint:html && npm run lint:md",
     "lint:js": "eslint .",
     "lint:html": "html-validate public/*.html",
@@ -61,10 +63,12 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.55.1",
     "eslint": "^10.11.0",
     "globals": "^17.13.0",
     "html-validate": "^11.0.0",
     "husky": "^9.1.7",
-    "markdownlint-cli2": "^0.23.3"
+    "markdownlint-cli2": "^0.23.3",
+    "yaml": "^2.8.1"
   }
 }

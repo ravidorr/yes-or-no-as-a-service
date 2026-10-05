@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.0.2 - 2026-10-05
+
+- Reject shutdown readiness grace values greater than the shutdown timeout.
+- Validate `PORT` as an integer TCP port and skip server startup when imported
+  without a script path.
+- Make the Docker health check fail on non-200 `/health` responses.
+- Document legacy root share redirects and sync OpenAPI metadata with releases.
+- Disclose user-initiated third-party sharing in the privacy policy.
+- Add browser, container, tarball, OpenAPI, and graceful-drain integration tests.
+- Run CI smoke checks against the built Docker image instead of the host checkout.
+- Restore publish-time npm safeguards by removing `--ignore-scripts`.
+
 ## 1.0.1 - 2026-10-05
 
 - Exempt the Yes and No web UI pages from the API rate-limit quota.

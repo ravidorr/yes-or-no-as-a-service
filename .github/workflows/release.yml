@@ -89,7 +89,7 @@ jobs:
           labels: ${{ steps.container_meta.outputs.labels }}
 
       - name: Publish to npm
-        run: npm publish --access public --provenance --ignore-scripts
+        run: npm publish --access public --provenance
 
       - name: Create GitHub release
         env:

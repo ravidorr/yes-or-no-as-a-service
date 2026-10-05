@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import { resolve } from 'node:path';
+import { symlinkSync, unlinkSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
@@ -147,4 +149,21 @@ test('runIfMain skips MCP startup when imported as a dependency', (t) => {
   });
 
   assert.equal(start.mock.calls.length, 0);
+});
+
+test('runIfMain starts the MCP CLI when executed via a symlink', (t) => {
+  const start = t.mock.fn();
+  const linkPath = join(tmpdir(), `yornaas-mcp-link-${process.pid}.js`);
+
+  try {
+    symlinkSync(mcpServerPath, linkPath);
+    runIfMain({
+      moduleUrl: pathToFileURL(mcpServerPath).href,
+      argvPath: linkPath,
+      start
+    });
+    assert.equal(start.mock.calls.length, 1);
+  } finally {
+    unlinkSync(linkPath);
+  }
 });

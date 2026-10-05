@@ -29,6 +29,24 @@ test('parseShutdownConfig reads readiness grace env var', () => {
   });
 });
 
+test('parseShutdownConfig allows zero readiness grace', () => {
+  assert.deepEqual(parseShutdownConfig({ SHUTDOWN_READINESS_GRACE_MS: '0' }), {
+    timeoutMs: DEFAULT_SHUTDOWN_TIMEOUT_MS,
+    readinessGraceMs: 0
+  });
+});
+
+test('parseShutdownConfig rejects readiness grace greater than timeout', () => {
+  assert.throws(
+    () =>
+      parseShutdownConfig({
+        SHUTDOWN_TIMEOUT_MS: '1000',
+        SHUTDOWN_READINESS_GRACE_MS: '1001'
+      }),
+    /readinessGraceMs must not exceed timeoutMs/
+  );
+});
+
 test('parseShutdownConfig rejects zero', () => {
   assert.throws(
     () => parseShutdownConfig({ SHUTDOWN_TIMEOUT_MS: '0' }),
@@ -57,22 +75,55 @@ test('parseShutdownConfig rejects nonnumeric values', () => {
   );
 });
 
+test('parseShutdownConfig rejects invalid readiness grace values', () => {
+  assert.throws(
+    () => parseShutdownConfig({ SHUTDOWN_READINESS_GRACE_MS: '-1' }),
+    /SHUTDOWN_READINESS_GRACE_MS must be a non-negative integer/
+  );
+  assert.throws(
+    () => parseShutdownConfig({ SHUTDOWN_READINESS_GRACE_MS: '1.5' }),
+    /SHUTDOWN_READINESS_GRACE_MS must be a non-negative integer/
+  );
+  assert.throws(
+    () => parseShutdownConfig({ SHUTDOWN_READINESS_GRACE_MS: 'bad' }),
+    /SHUTDOWN_READINESS_GRACE_MS must be a non-negative integer/
+  );
+});
+
 test('validateShutdownConfig rejects invalid values', () => {
   assert.throws(
     () => validateShutdownConfig({ timeoutMs: 0, readinessGraceMs: DEFAULT_READINESS_GRACE_MS }),
     /timeoutMs must be a positive integer/
   );
+  assert.deepEqual(
+    validateShutdownConfig({
+      timeoutMs: DEFAULT_SHUTDOWN_TIMEOUT_MS,
+      readinessGraceMs: 0
+    }),
+    {
+      timeoutMs: DEFAULT_SHUTDOWN_TIMEOUT_MS,
+      readinessGraceMs: 0
+    }
+  );
   assert.throws(
     () =>
       validateShutdownConfig({
         timeoutMs: DEFAULT_SHUTDOWN_TIMEOUT_MS,
-        readinessGraceMs: 0
+        readinessGraceMs: DEFAULT_SHUTDOWN_TIMEOUT_MS + 1
       }),
-    /readinessGraceMs must be a positive integer/
+    /readinessGraceMs must not exceed timeoutMs/
   );
   assert.throws(
     () => validateShutdownConfig({ timeoutMs: MAX_SHUTDOWN_TIMEOUT_MS + 1, readinessGraceMs: 1 }),
     /timeoutMs must not exceed 2147483647, the maximum Node.js timer delay/
+  );
+  assert.throws(
+    () =>
+      validateShutdownConfig({
+        timeoutMs: DEFAULT_SHUTDOWN_TIMEOUT_MS,
+        readinessGraceMs: -1
+      }),
+    /readinessGraceMs must be a non-negative integer/
   );
 });
 

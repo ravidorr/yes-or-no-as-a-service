@@ -4,7 +4,7 @@ YorNaaS is a small open source project. This policy describes how the project ha
 
 ## Summary
 
-YorNaaS does not collect, store, sell, or share personal data.
+YorNaaS does not collect, store, sell, or track end users in the application itself.
 
 We do not use accounts, analytics, advertising trackers, or cookies for tracking
 end users.
@@ -12,6 +12,18 @@ end users.
 ## What YorNaaS does
 
 When you run YorNaaS locally or deploy it yourself, the service responds to requests with plain text output. Request content is handled in memory to produce that response and is not persisted by the application.
+
+Shared links include the request text in the URL query string. Browser history,
+referrer headers, proxy logs, and similar infrastructure may retain that URL.
+
+## User-initiated sharing
+
+The web UI can generate share links and open third-party destinations such as
+X, Facebook, LinkedIn, email, and WhatsApp. Those actions happen only when a
+user clicks a share control. The destination provider then receives the share
+URL and any text included in that link according to its own policies.
+
+YorNaaS does not send that data to those providers automatically.
 
 ## What we do not do
 
@@ -21,7 +33,7 @@ YorNaaS does not and will not:
 - collect names, email addresses, or contact details
 - collect user analytics or behavioral telemetry in the application
 - set tracking cookies
-- sell or share personal data with third parties
+- sell personal data to third parties
 
 ## Third-party services
 

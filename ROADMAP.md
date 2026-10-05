@@ -10,7 +10,7 @@ Living plan for [yes-or-no-as-a-service](https://github.com/ravidorr/yes-or-no-a
 | --- | --- |
 | npm package | `@ravidor/yornaas` (matches npm user `ravidor`; GitHub stays `ravidorr`) |
 | CI publish | [Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) via `release.yml` (no `NPM_TOKEN`) |
-| Required checks on `main` | `test`, `release-notes`, `lint`, `smoke` |
+| Required checks on `main` | `test`, `release-notes`, `lint`, `smoke`, `package`, `e2e` |
 | Rate limit | HTTP `429`, body route hint (plain text) |
 | Container registry | [GHCR](https://ghcr.io) `ghcr.io/ravidorr/yes-or-no-as-a-service` on release |
 
