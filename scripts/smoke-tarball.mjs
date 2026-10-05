@@ -53,6 +53,9 @@ try {
   const noOutput = await run(join(prefixDir, 'bin', 'yesornoaas'), ['no']);
   assert.equal(noOutput.stdout.trim(), 'No!');
 
+  const randomOutput = await run(join(prefixDir, 'bin', 'yesornoaas'), ['random']);
+  assert.match(randomOutput.stdout.trim(), /^(Yes!|No!)$/);
+
   const mcpPath = join(prefixDir, 'bin', 'yesornoaas-mcp');
   const client = new Client({ name: 'yesornoaas-pack-smoke', version: '0.0.0' });
   const transport = new StdioClientTransport({
@@ -65,7 +68,7 @@ try {
   const tools = await client.listTools();
   assert.deepEqual(
     tools.tools.map((tool) => tool.name),
-    ['yes', 'no']
+    ['yes', 'no', 'random']
   );
   await client.close();
 
