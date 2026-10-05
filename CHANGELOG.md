@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3 - 2026-10-05
+
+- Reuse an existing local dev server for Playwright when port 3000 is already in use.
+- Exclude Playwright `test-results` artifacts from Markdown linting.
+
 ## 1.0.2 - 2026-10-05
 
 - Reject shutdown readiness grace values greater than the shutdown timeout.

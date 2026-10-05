@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: YorNaaS API
-  version: 1.0.2
+  version: 1.0.3
   description: |
     Call `/api/yes` for `Yes!` or `/api/no` for `No!`.
     Static assets, `GET /version`, `GET /health`, and `GET /metrics` are served
