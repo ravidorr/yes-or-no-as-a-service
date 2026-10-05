@@ -1,6 +1,6 @@
 {
   "name": "@ravidor/yornaas",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Yes or No as a Service: call /api/yes or /api/no for Yes! or No!",
   "license": "MIT",
   "type": "module",
@@ -49,7 +49,7 @@
     "lint": "npm run lint:js && npm run lint:html && npm run lint:md",
     "lint:js": "eslint .",
     "lint:html": "html-validate public/*.html",
-    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\"",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#test-results\"",
     "verify:release-notes": "node scripts/verify-release-notes.mjs"
   },
   "dependencies": {
