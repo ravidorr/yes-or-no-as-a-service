@@ -305,6 +305,7 @@ test('serves the yes UI at /yes', async () => {
   assert.match(body, /Ask a yes\/no question/);
   assert.match(body, />Ask<\/span>/);
   assert.match(body, /id="share-url"/);
+  assert.match(body, /<section id="share" class="share pendo-ignore" hidden>/);
   assert.match(body, /id="copy"/);
   assert.match(body, />Copy link<\/span>/);
   assert.match(body, /id="preview"/);

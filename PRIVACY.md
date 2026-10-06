@@ -25,8 +25,9 @@ Pendo is disabled by default. It is not included in local development, CI, or
 self-hosted deployments unless the operator explicitly configures
 `PENDO_PUBLIC_APP_ID`.
 
-The Pendo configuration excludes the `request` query parameter, so question
-text in shared links is not sent to Pendo as part of the captured URL.
+The Pendo configuration excludes the `request` query parameter and ignores the
+share controls containing shared-link URLs, so question text is not sent to
+Pendo through captured URLs or share interactions.
 
 ## User-initiated sharing
 

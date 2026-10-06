@@ -15,7 +15,7 @@ with a route hint.
 
 ## Requirements
 
-- Node.js 22 or newer
+- Node.js 22.9 or newer
 - npm
 
 ## Install
@@ -163,7 +163,7 @@ PENDO_PUBLIC_APP_ID=<your-pendo-public-app-id>
 Then use `npm start`. Do not add this variable for local development, CI, or
 self-hosted deployments unless you want their activity sent to that Pendo
 application. The integration excludes shared-link `request` query text from
-captured URLs. See
+captured URLs and ignores share controls containing that text. See
 [the privacy policy](PRIVACY.md) for details.
 
 ## Docker
@@ -180,6 +180,9 @@ To start the local Docker configuration with values from `.env`:
 ```sh
 docker compose up --build
 ```
+
+The `.env` file is optional for Compose. The container always listens on port
+3000, even if `.env` sets a different `PORT` value.
 
 Pull the published release image from GHCR:
 

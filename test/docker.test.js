@@ -49,10 +49,12 @@ test('.dockerignore excludes development-only build context', () => {
 test('Compose loads local environment values for the development container', () => {
   const compose = parse(readFileSync(composePath, 'utf8'));
 
-  assert.deepEqual(compose.services.yesornoaas.env_file, ['.env']);
+  assert.deepEqual(compose.services.yesornoaas.env_file, [{ path: '.env', required: false }]);
+  assert.equal(compose.services.yesornoaas.environment.PORT, '3000');
   assert.deepEqual(compose.services.yesornoaas.ports, ['3000:3000']);
 });
 
 test('npm start loads an optional local environment file', () => {
   assert.equal(packageInfo.scripts.start, 'node --env-file-if-exists=.env src/server.js');
+  assert.equal(packageInfo.engines.node, '>=22.9.0');
 });
