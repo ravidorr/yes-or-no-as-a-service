@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.1 - 2026-10-06
+
+- Update the HTML validator development dependency.
+
 ## 2.1.0 - 2026-10-05
 
 - Replace the answer pages with a shared responsive template, persistent theme
