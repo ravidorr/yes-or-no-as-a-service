@@ -47,4 +47,7 @@ test('CI smoke job builds and runs the Docker image', () => {
   assert.match(smokeScript, /docker exec yesornoaas-ci id -u/);
   assert.match(smokeScript, /docker stop --time=30 yesornoaas-ci/);
   assert.match(smokeScript, /docker wait yesornoaas-ci/);
+  assert.match(smokeScript, /grep -q 'data-mode="404"' root\.txt/);
+  assert.match(smokeScript, /grep -q 'data-mode="404"' unknown\.txt/);
+  assert.doesNotMatch(smokeScript, /Use \/api\/yes, \/api\/no, or \/api\/random/);
 });

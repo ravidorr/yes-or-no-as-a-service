@@ -20,6 +20,12 @@ async function startServer(app) {
   };
 }
 
+async function assertNotFoundPage(response) {
+  assert.equal(response.status, 404);
+  assert.match(response.headers.get('content-type'), /^text\/html/);
+  assert.match(await response.text(), /<body data-mode="404">/);
+}
+
 test('throttles /api/no after the configured limit is exceeded', async () => {
   const { baseUrl, close } = await startServer(createApp({ rateLimitConfig: strictRateLimitConfig }));
 
@@ -93,8 +99,7 @@ test('throttles unknown routes after the configured limit is exceeded', async ()
     for (let index = 0; index < strictRateLimitConfig.max; index += 1) {
       const response = await fetch(`${baseUrl}/anything-${index}`);
 
-      assert.equal(response.status, 404);
-      assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+      await assertNotFoundPage(response);
     }
 
     const throttled = await fetch(`${baseUrl}/anything-else`);
@@ -114,8 +119,7 @@ test('does not throttle GET /version, GET /health, GET /metrics, static assets, 
     assert.equal(styles.status, 200);
 
     const root = await fetch(`${baseUrl}/`);
-    assert.equal(root.status, 404);
-    assert.equal(await root.text(), UNKNOWN_ROUTE_HINT);
+    await assertNotFoundPage(root);
 
     const yesPage = await fetch(`${baseUrl}/yes`);
     assert.equal(yesPage.status, 200);
@@ -191,8 +195,7 @@ test('rate limits non-GET /health requests through unknown routes', async () => 
 
   try {
     const first = await fetch(`${baseUrl}/health`, { method: 'POST' });
-    assert.equal(first.status, 404);
-    assert.equal(await first.text(), UNKNOWN_ROUTE_HINT);
+    await assertNotFoundPage(first);
 
     const throttled = await fetch(`${baseUrl}/health`, { method: 'POST' });
     assert.equal(throttled.status, 429);
@@ -207,8 +210,7 @@ test('rate limits non-GET /version requests through unknown routes', async () =>
 
   try {
     const first = await fetch(`${baseUrl}/version`, { method: 'POST' });
-    assert.equal(first.status, 404);
-    assert.equal(await first.text(), UNKNOWN_ROUTE_HINT);
+    await assertNotFoundPage(first);
 
     const throttled = await fetch(`${baseUrl}/version`, { method: 'POST' });
     assert.equal(throttled.status, 429);

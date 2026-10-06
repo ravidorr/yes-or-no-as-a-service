@@ -1,15 +1,15 @@
 openapi: 3.1.1
 info:
   title: YESorNOaaS API
-  version: 2.0.0
+  version: 2.1.0
   description: |
     Call `/api/yes` for `Yes!`, `/api/no` for `No!`, or `/api/random` for a
     random `Yes!` or `No!`.
     Static assets, `GET /version`, `GET /health`, and `GET /metrics` are served
     outside the answer routes. Legacy root share URLs with a `request` query
     parameter redirect to `/yes`, `/no`, or `/random`. Other unmatched paths
-    return `404 text/plain` with a hint. Rate-limited requests return
-    `429 text/plain` with the same hint.
+    return the HTML 404 page. Rate-limited requests return `429 text/plain`
+    with a route hint.
 paths:
   /:
     get:
@@ -36,10 +36,9 @@ paths:
         '404':
           description: Root path without a request query parameter
           content:
-            text/plain:
+            text/html:
               schema:
                 type: string
-                const: 'Use /api/yes, /api/no, or /api/random. Example: GET /api/yes -> Yes!'
   /version:
     get:
       summary: Return the package version as plain text
@@ -281,4 +280,4 @@ components:
             type: string
             const: 'Use /api/yes, /api/no, or /api/random. Example: GET /api/yes -> Yes!'
 x-yesornoaas-unknown-routes:
-  description: Unmatched request paths, except legacy root share redirects, return `404 text/plain` with a hint until throttled, then `429 text/plain` with the same hint.
+  description: Unmatched request paths, except legacy root share redirects, return the HTML 404 page until throttled, then `429 text/plain` with a route hint.
