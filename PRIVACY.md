@@ -4,9 +4,13 @@ YESorNOaaS is a small open source project. This policy describes how the project
 
 ## Summary
 
-YESorNOaaS does not require accounts or collect names, email addresses, or other
-direct identifiers. Operators can optionally enable Pendo analytics for an
-official deployment by configuring `PENDO_PUBLIC_APP_ID`.
+YESorNOaaS does not require accounts, sell personal data, or use advertising
+trackers. Operators can optionally enable Pendo analytics for a deployment by
+configuring `PENDO_PUBLIC_APP_ID`.
+
+The web UI can report a small set of product analytics events to
+[Pendo](https://www.pendo.io/) when that deployment enables Pendo. See
+[Product analytics](#product-analytics) for what those events contain.
 
 ## What YESorNOaaS does
 
@@ -38,12 +42,39 @@ URL and any text included in that link according to its own policies.
 
 YESorNOaaS does not send that data to those providers automatically.
 
+## Product analytics
+
+The web UI sends these events through the Pendo agent's `pendo.track()` API:
+
+- `question_answered`: an answer was shown for a question you typed
+- `shared_link_replay_completed`: a shared link finished replaying its answer
+- `answer_request_failed`: an answer request timed out or failed
+- `share_link_copied`: a share link was copied to the clipboard
+- `share_link_copy_failed`: copying a share link failed
+
+Event properties are limited to the page mode (`yes`, `no`, or `random`), the
+answer shown, the question length in characters, the response time, the error
+kind, HTTP status, and error type name, whether the clipboard API was
+available, whether the answer came from your own question or a shared link, and
+whether a shared link was opened from inside or outside the site. Event
+properties never include question text, share URLs, or referrer URLs.
+
+When configured with `PENDO_PUBLIC_APP_ID`, the app loads the Pendo agent and
+these events are sent. Pendo also records page URLs, page views, and
+interactions such as clicks, and stores a visitor identifier in the browser,
+under that operator's and Pendo's policies. The Pendo configuration excludes
+the `request` query parameter from captured URLs and ignores share controls
+containing shared-link URLs, so question text is not sent through captured URLs
+or share interactions.
+
 ## What we do not do
 
 YESorNOaaS does not and will not:
 
 - require user accounts
 - collect names, email addresses, or contact details
+- include question text, share URLs, or referrer URLs in analytics event properties
+- set tracking cookies or local storage unless an operator enables Pendo
 - sell personal data to third parties
 
 ## Third-party services
@@ -54,10 +85,10 @@ If you deploy YESorNOaaS to your own infrastructure, your hosting provider's pol
 
 ## Operational metrics
 
-YESorNOaaS does not track users. Self-hosted operators may scrape `GET /metrics` for
-operational monitoring (CPU, memory, HTTP request counts, and similar runtime
-signals). That telemetry describes the service process, not individual users or
-request content persisted by the application.
+Self-hosted operators may scrape `GET /metrics` for operational monitoring (CPU,
+memory, HTTP request counts, and similar runtime signals). That telemetry
+describes the service process, not individual users or request content
+persisted by the application.
 
 ## Changes
 

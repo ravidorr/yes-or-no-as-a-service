@@ -75,7 +75,12 @@ function createElement(tag, { id, className = '', hidden = false, dataset = {}, 
   return element;
 }
 
-function createAppFixture({ mode = 'yes', search = '', locationHref = 'https://example.test/yes' } = {}) {
+function createAppFixture({
+  mode = 'yes',
+  search = '',
+  locationHref = 'https://example.test/yes',
+  referrer = ''
+} = {}) {
   const replayLinks = [
     createElement('a', { dataset: { replayMode: 'no' } }),
     createElement('a', { dataset: { replayMode: 'random' } })
@@ -173,9 +178,11 @@ function createAppFixture({ mode = 'yes', search = '', locationHref = 'https://e
     previewHref: null,
     copiedText: null,
     fetchCalls: [],
+    trackedEvents: [],
     document: {
       body: documentBody,
       title: '',
+      referrer,
       documentElement: { dataset: {} },
       querySelector(selector) {
         return documentBody.querySelector(selector);
@@ -192,6 +199,11 @@ function createAppFixture({ mode = 'yes', search = '', locationHref = 'https://e
         href: locationHref,
         origin: 'https://example.test',
         search
+      },
+      pendo: {
+        track(eventName, properties) {
+          localThis.trackedEvents.push({ eventName, properties });
+        }
       },
       setTimeout(callback) {
         callback();
@@ -365,6 +377,7 @@ test('initializeApp ignores stale submit completions', async () => {
   await new Promise((resolve) => setTimeout(resolve, 0));
 
   assert.equal(localThis.elements.answerText.textContent, '');
+  assert.deepEqual(localThis.trackedEvents, []);
 });
 
 test('initializeApp aborts an existing controller before submitting again', async () => {
@@ -407,6 +420,7 @@ test('initializeApp cancels an in-flight request when input changes', async () =
   await submitPromise;
 
   assert.equal(localThis.elements.answerText.textContent, '');
+  assert.deepEqual(localThis.trackedEvents, []);
 });
 
 test('initializeApp copies share links and reports failures', async () => {
@@ -579,4 +593,229 @@ test('initializeApp ignores empty submits and copy actions', async () => {
   assert.equal(localThis.fetchCalls.length, 0);
   assert.equal(localThis.copiedText, null);
   assert.equal(localThis.previewHref, null);
+});
+
+test('initializeApp tracks question_answered for typed questions', async () => {
+  const localThis = createAppFixture({
+    mode: 'random',
+    locationHref: 'https://example.test/random'
+  });
+  const times = [1000, 1250.4];
+  initializeFixture(localThis, {
+    performance: { now: () => times.shift() },
+    fetchResponse: {
+      ok: true,
+      async text() {
+        return 'No!';
+      }
+    }
+  });
+
+  localThis.elements.input.value = 'Maybe?';
+  localThis.elements.input.listeners.input();
+  await localThis.elements.form.listeners.submit({ preventDefault() {} });
+
+  assert.deepEqual(localThis.trackedEvents, [
+    {
+      eventName: 'question_answered',
+      properties: {
+        mode: 'random',
+        answer_result: 'no',
+        request_length: 6,
+        response_time_ms: 250
+      }
+    }
+  ]);
+});
+
+test('initializeApp tracks failed answer requests with the HTTP status', async () => {
+  const localThis = createAppFixture();
+  const outcomes = [
+    ({ onUnavailable }) => onUnavailable(429),
+    ({ onUnavailable }) => onUnavailable(null),
+    ({ onTimeout }) => onTimeout()
+  ];
+  initializeFixture(localThis, {
+    submitAnswerRequestImpl: async (options) => {
+      outcomes.shift()(options);
+    }
+  });
+
+  localThis.elements.input.value = 'Can I?';
+  localThis.elements.input.listeners.input();
+  await localThis.elements.form.listeners.submit({ preventDefault() {} });
+  await localThis.elements.form.listeners.submit({ preventDefault() {} });
+  await localThis.elements.form.listeners.submit({ preventDefault() {} });
+
+  assert.deepEqual(localThis.trackedEvents.map(({ eventName }) => eventName), [
+    'answer_request_failed',
+    'answer_request_failed',
+    'answer_request_failed'
+  ]);
+  assert.deepEqual(localThis.trackedEvents.map(({ properties }) => properties), [
+    { error_kind: 'unavailable', http_status: 429, mode: 'yes', source: 'manual' },
+    { error_kind: 'unavailable', http_status: null, mode: 'yes', source: 'manual' },
+    { error_kind: 'timeout', http_status: null, mode: 'yes', source: 'manual' }
+  ]);
+});
+
+test('initializeApp tracks shared link replays instead of question_answered', async () => {
+  const localThis = createAppFixture({
+    search: '?request=Hi',
+    referrer: 'https://example.test/no?request=Hi'
+  });
+  initializeFixture(localThis);
+
+  await new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+
+  assert.deepEqual(localThis.trackedEvents, [
+    {
+      eventName: 'shared_link_replay_completed',
+      properties: {
+        mode: 'yes',
+        answer_result: 'yes',
+        request_length: 2,
+        animated: true,
+        entry_point: 'in_app'
+      }
+    }
+  ]);
+});
+
+test('initializeApp reports external opens of long shared links as unanimated', async () => {
+  const text = 'a'.repeat(101);
+  const localThis = createAppFixture({
+    search: `?request=${text}`,
+    referrer: 'https://t.co/abc'
+  });
+  initializeFixture(localThis);
+
+  await new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+
+  assert.deepEqual(localThis.trackedEvents, [
+    {
+      eventName: 'shared_link_replay_completed',
+      properties: {
+        mode: 'yes',
+        answer_result: 'yes',
+        request_length: 101,
+        animated: false,
+        entry_point: 'external'
+      }
+    }
+  ]);
+});
+
+test('initializeApp attributes failed shared link replays to the shared link', async () => {
+  const localThis = createAppFixture({ search: '?request=Hi' });
+  initializeFixture(localThis, {
+    fetchResponse: {
+      ok: false,
+      status: 503,
+      async text() {
+        return '';
+      }
+    }
+  });
+
+  await new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+
+  assert.deepEqual(localThis.trackedEvents, [
+    {
+      eventName: 'answer_request_failed',
+      properties: { error_kind: 'unavailable', http_status: 503, mode: 'yes', source: 'shared_link' }
+    }
+  ]);
+});
+
+test('initializeApp tracks share link copies with the source of the shared answer', async () => {
+  const localThis = createAppFixture({ search: '?request=Hi' });
+  initializeFixture(localThis);
+
+  await new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+  await localThis.elements.copyButton.listeners.click();
+
+  localThis.elements.input.value = 'Can I?';
+  localThis.elements.input.listeners.input();
+  await localThis.elements.form.listeners.submit({ preventDefault() {} });
+  await localThis.elements.copyButton.listeners.click();
+
+  assert.deepEqual(localThis.trackedEvents.map(({ eventName }) => eventName), [
+    'shared_link_replay_completed',
+    'share_link_copied',
+    'question_answered',
+    'share_link_copied'
+  ]);
+  assert.deepEqual(localThis.trackedEvents[1].properties, {
+    mode: 'yes',
+    answer_result: 'yes',
+    source: 'shared_link'
+  });
+  assert.deepEqual(localThis.trackedEvents[3].properties, {
+    mode: 'yes',
+    answer_result: 'yes',
+    source: 'manual'
+  });
+});
+
+test('initializeApp tracks share link copy failures without the share URL', async () => {
+  const localThis = createAppFixture();
+  initializeFixture(localThis);
+
+  localThis.elements.input.value = 'Can I?';
+  localThis.elements.input.listeners.input();
+  await localThis.elements.form.listeners.submit({ preventDefault() {} });
+
+  const notAllowedError = new Error('denied');
+  notAllowedError.name = 'NotAllowedError';
+  localThis.navigator.clipboard.writeText = async () => {
+    throw notAllowedError;
+  };
+  await localThis.elements.copyButton.listeners.click();
+
+  localThis.navigator.clipboard.writeText = async () => {
+    throw 'denied';
+  };
+  await localThis.elements.copyButton.listeners.click();
+
+  delete localThis.navigator.clipboard;
+  await localThis.elements.copyButton.listeners.click();
+
+  assert.deepEqual(
+    localThis.trackedEvents
+      .filter(({ eventName }) => eventName === 'share_link_copy_failed')
+      .map(({ properties }) => properties),
+    [
+      { mode: 'yes', clipboard_api_available: true, error_name: 'NotAllowedError' },
+      { mode: 'yes', clipboard_api_available: true, error_name: 'unknown' },
+      { mode: 'yes', clipboard_api_available: false, error_name: 'TypeError' }
+    ]
+  );
+});
+
+test('initializeApp treats later submits as typed when a shared link submit throws', async () => {
+  const localThis = createAppFixture({ search: '?request=Hi' });
+  localThis.elements.form.requestSubmit = () => {
+    throw new TypeError('requestSubmit is not supported');
+  };
+  initializeFixture(localThis, {
+    autoplayRequestImpl: ({ text, appendChar, submitForm }) => {
+      appendChar(text);
+      assert.throws(submitForm, TypeError);
+    }
+  });
+
+  await localThis.elements.form.listeners.submit({ preventDefault() {} });
+
+  assert.deepEqual(localThis.trackedEvents.map(({ eventName }) => eventName), [
+    'question_answered'
+  ]);
 });

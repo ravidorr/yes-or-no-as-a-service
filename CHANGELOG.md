@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.2.1 - 2026-10-06
+
+- Add Pendo Track Events to the web UI for answered questions, shared-link
+  replays, failed answer requests, and share link copies. The events send only
+  categorical and numeric details, never question text, and are sent only when
+  Pendo is enabled for the deployment.
+- Describe the product analytics events in the privacy policy.
+
 ## 2.2.0 - 2026-10-06
 
 - Support opt-in Novus by Pendo analytics for configured deployments, excluding
