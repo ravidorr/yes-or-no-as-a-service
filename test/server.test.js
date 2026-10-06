@@ -6,9 +6,6 @@ import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import packageInfo from '../package.json' with { type: 'json' };
 import {
-  UNKNOWN_ROUTE_HINT
-} from '../src/responses.js';
-import {
   app,
   createApp,
   parseListenPort,
@@ -58,6 +55,25 @@ function requestServer(url, method) {
   });
 }
 
+async function assertNotFoundPage(response) {
+  assert.equal(response.status, 404);
+  assert.match(response.headers.get('content-type'), /^text\/html/);
+
+  const body = await response.text();
+  assert.match(body, /<body data-mode="404">/);
+  assert.match(body, /<h1>Page not found<\/h1>/);
+  assert.match(body, /<script src="\/theme-bootstrap\.js"><\/script>/);
+
+  return body;
+}
+
+function assertRawNotFoundPage(response) {
+  assert.equal(response.status, 404);
+  assert.match(response.headers['content-type'], /^text\/html/);
+  assert.match(response.body, /<body data-mode="404">/);
+  assert.match(response.body, /<h1>Page not found<\/h1>/);
+}
+
 before(async () => {
   server = app.listen(0);
   await new Promise((resolvePromise) => server.once('listening', resolvePromise));
@@ -89,20 +105,16 @@ test('returns Prometheus metrics with runtime and HTTP families', async () => {
   assert.doesNotMatch(body, /yesornoaas_http_requests_total\{route="metrics"/);
 });
 
-test('returns 404 hint for POST /metrics', async () => {
+test('returns the 404 page for POST /metrics', async () => {
   const response = await fetch(`${baseUrl}/metrics`, { method: 'POST' });
 
-  assert.equal(response.status, 404);
-  assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8');
-  assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+  await assertNotFoundPage(response);
 });
 
-test('returns 404 hint for unmatched paths below metrics', async () => {
+test('returns the 404 page for unmatched paths below metrics', async () => {
   const response = await fetch(`${baseUrl}/metrics/anything`);
 
-  assert.equal(response.status, 404);
-  assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8');
-  assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+  await assertNotFoundPage(response);
 });
 
 test('returns metrics while health is draining', async () => {
@@ -143,20 +155,16 @@ test('returns the package version as plain text', async () => {
   assert.equal(await response.text(), packageInfo.version);
 });
 
-test('returns 404 hint for POST /version', async () => {
+test('returns the 404 page for POST /version', async () => {
   const response = await fetch(`${baseUrl}/version`, { method: 'POST' });
 
-  assert.equal(response.status, 404);
-  assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8');
-  assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+  await assertNotFoundPage(response);
 });
 
-test('returns 404 hint for unmatched paths below version', async () => {
+test('returns the 404 page for unmatched paths below version', async () => {
   const response = await fetch(`${baseUrl}/version/anything`);
 
-  assert.equal(response.status, 404);
-  assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8');
-  assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+  await assertNotFoundPage(response);
 });
 
 test('returns 503 for GET /health while shutting down', async () => {
@@ -201,28 +209,27 @@ test('returns the package version while shutting down', async () => {
   }
 });
 
-test('returns 404 hint for unmatched paths below health', async () => {
+test('returns the 404 page for unmatched paths below health', async () => {
   const response = await fetch(`${baseUrl}/health/anything`);
 
-  assert.equal(response.status, 404);
-  assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8');
-  assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+  await assertNotFoundPage(response);
 });
 
-test('returns 404 hint for POST /health', async () => {
+test('returns the 404 page for POST /health', async () => {
   const response = await fetch(`${baseUrl}/health`, { method: 'POST' });
 
-  assert.equal(response.status, 404);
-  assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8');
-  assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+  await assertNotFoundPage(response);
 });
 
-test('returns 404 hint for unknown paths', async () => {
+test('returns the themed 404 page for unknown paths', async () => {
   const response = await fetch(`${baseUrl}/anything/really?x=1`);
 
-  assert.equal(response.status, 404);
-  assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8');
-  assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+  const body = await assertNotFoundPage(response);
+
+  assert.match(body, /<div class="nf-code" role="img" aria-label="Error 404">404<\/div>/);
+  assert.match(body, /href="\/yes"/);
+  assert.match(body, /href="\/no"/);
+  assert.match(body, /href="\/random"/);
 });
 
 test('serves the OpenAPI specification', async () => {
@@ -253,23 +260,19 @@ test('serves the OpenAPI specification', async () => {
   assert.match(document, /^    NoResponse:$/m);
   assert.match(document, /^    ThrottledResponse:$/m);
   assert.match(document, /^x-yesornoaas-unknown-routes:$/m);
-  assert.match(document, /^  description: Unmatched request paths, except legacy root share redirects, return `404 text\/plain` with a hint until throttled, then `429 text\/plain` with the same hint\.$/m);
+  assert.match(document, /^  description: Unmatched request paths, except legacy root share redirects, return the HTML 404 page until throttled, then `429 text\/plain` with a route hint\.$/m);
 });
 
-test('returns 404 hint for GET /', async () => {
+test('returns the 404 page for GET /', async () => {
   const response = await fetch(`${baseUrl}/`);
 
-  assert.equal(response.status, 404);
-  assert.equal(response.headers.get('content-type'), 'text/plain; charset=utf-8');
-  assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+  await assertNotFoundPage(response);
 });
 
-test('returns 404 hint for GET / when request is not a string query value', async () => {
+test('returns the 404 page for GET / when request is not a string query value', async () => {
   const response = await requestServer(`${baseUrl}/?request=a&request=b`, 'GET');
 
-  assert.equal(response.status, 404);
-  assert.equal(response.headers['content-type'], 'text/plain; charset=utf-8');
-  assert.equal(response.body, UNKNOWN_ROUTE_HINT);
+  assertRawNotFoundPage(response);
 });
 
 test('redirects legacy root share links to the matching answer page', async () => {
@@ -302,37 +305,54 @@ test('serves the yes UI at /yes', async () => {
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type'), /^text\/html/);
-  assert.match(body, /<title>YESorNOaaS - Yes<\/title>/);
-  assert.match(body, /<body data-answer="yes">/);
-  assert.match(body, /<h1 id="title">Ask a yes\/no question and get a Yes! response<\/h1>/);
-  assert.match(body, /aria-label="Other YESorNOaaS answer modes"/);
-  assert.match(body, /Get a &quot;No!&quot; replay/);
-  assert.match(body, /Get a random replay/);
-  assert.doesNotMatch(body, /Get a &quot;Yes!&quot; replay/);
-  assert.match(body, /id="yesornoaas-form"/);
+  assert.match(body, /<title>YESorNOaaS<\/title>/);
+  assert.match(body, /<body data-mode="yes">/);
+  assert.match(body, /id="page-heading"/);
+  assert.match(body, /aria-label="Other answers"/);
+  assert.match(body, /id="replays"/);
+  assert.match(body, /id="ask-form"/);
   assert.match(body, /Ask a yes\/no question/);
-  assert.match(body, />Ask for Yes!<\/button>/);
-  assert.match(body, /id="share-link"/);
-  assert.match(body, /id="copy-url-button"/);
-  assert.match(body, />Copy link<\/button>/);
-  assert.match(body, /id="preview-link-button"/);
-  assert.match(body, />Preview link<\/button>/);
+  assert.match(body, />Ask<\/span>/);
+  assert.match(body, /id="share-url"/);
+  assert.match(body, /id="copy"/);
+  assert.match(body, />Copy link<\/span>/);
+  assert.match(body, /id="preview"/);
+  assert.match(body, />Preview link<\/span>/);
   assert.match(body, /id="share-status"/);
   assert.match(body, /id="share-x-link"/);
-  assert.match(body, /aria-label="Share on X"/);
+  assert.match(body, /aria-label="X"/);
   assert.match(body, /id="share-facebook-link"/);
-  assert.match(body, /aria-label="Share on Facebook"/);
+  assert.match(body, /aria-label="Facebook"/);
   assert.match(body, /id="share-linkedin-link"/);
-  assert.match(body, /aria-label="Share on LinkedIn"/);
+  assert.match(body, /aria-label="LinkedIn"/);
   assert.match(body, /id="share-email-link"/);
-  assert.match(body, /aria-label="Share by email"/);
+  assert.match(body, /aria-label="Email"/);
   assert.match(body, /id="share-whatsapp-link"/);
-  assert.match(body, /aria-label="Share on WhatsApp"/);
-  assert.match(body, />Share link<\/p>/);
-  assert.match(body, /All done\. Share the link below\./);
-  assert.match(body, /Opening this link shows the question and the Yes! reply\./);
+  assert.match(body, /aria-label="WhatsApp"/);
+  assert.match(body, />Share the link below\./);
+  assert.match(body, /Try another answer/);
+  assert.match(body, /id="theme-toggle"/);
+  assert.match(body, /<script src="\/theme-bootstrap\.js"><\/script>/);
+  assert.match(body, /id="empty"/);
+  assert.match(body, /id="status"/);
+  assert.match(body, /id="error"/);
+  assert.match(body, /id="answer"/);
   assert.match(body, /type="module" src="\/app\.js"/);
   assert.doesNotMatch(body, /type="radio"/);
+});
+
+test('does not serve the unconfigured page template as a static asset', async () => {
+  const response = await fetch(`${baseUrl}/index.html`);
+
+  await assertNotFoundPage(response);
+});
+
+test('serves styles without an external Google Fonts request', async () => {
+  const response = await fetch(`${baseUrl}/styles.css`);
+  const stylesheet = await response.text();
+
+  assert.equal(response.status, 200);
+  assert.doesNotMatch(stylesheet, /fonts\.googleapis\.com/);
 });
 
 test('serves the no UI at /no', async () => {
@@ -341,35 +361,32 @@ test('serves the no UI at /no', async () => {
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type'), /^text\/html/);
-  assert.match(body, /<title>YESorNOaaS - No<\/title>/);
-  assert.match(body, /<body data-answer="no">/);
-  assert.match(body, /<h1 id="title">Ask a yes\/no question and get a No! response<\/h1>/);
-  assert.match(body, /aria-label="Other YESorNOaaS answer modes"/);
-  assert.match(body, /Get a &quot;Yes!&quot; replay/);
-  assert.match(body, /Get a random replay/);
-  assert.doesNotMatch(body, /Get a &quot;No!&quot; replay/);
-  assert.match(body, /id="yesornoaas-form"/);
+  assert.match(body, /<title>YESorNOaaS<\/title>/);
+  assert.match(body, /<body data-mode="no">/);
+  assert.match(body, /id="page-heading"/);
+  assert.match(body, /aria-label="Other answers"/);
+  assert.match(body, /id="replays"/);
+  assert.match(body, /id="ask-form"/);
   assert.match(body, /Ask a yes\/no question/);
-  assert.match(body, />Ask for No!<\/button>/);
-  assert.match(body, /id="share-link"/);
-  assert.match(body, /id="copy-url-button"/);
-  assert.match(body, />Copy link<\/button>/);
-  assert.match(body, /id="preview-link-button"/);
-  assert.match(body, />Preview link<\/button>/);
+  assert.match(body, />Ask<\/span>/);
+  assert.match(body, /id="share-url"/);
+  assert.match(body, /id="copy"/);
+  assert.match(body, />Copy link<\/span>/);
+  assert.match(body, /id="preview"/);
+  assert.match(body, />Preview link<\/span>/);
   assert.match(body, /id="share-status"/);
   assert.match(body, /id="share-x-link"/);
-  assert.match(body, /aria-label="Share on X"/);
+  assert.match(body, /aria-label="X"/);
   assert.match(body, /id="share-facebook-link"/);
-  assert.match(body, /aria-label="Share on Facebook"/);
+  assert.match(body, /aria-label="Facebook"/);
   assert.match(body, /id="share-linkedin-link"/);
-  assert.match(body, /aria-label="Share on LinkedIn"/);
+  assert.match(body, /aria-label="LinkedIn"/);
   assert.match(body, /id="share-email-link"/);
-  assert.match(body, /aria-label="Share by email"/);
+  assert.match(body, /aria-label="Email"/);
   assert.match(body, /id="share-whatsapp-link"/);
-  assert.match(body, /aria-label="Share on WhatsApp"/);
-  assert.match(body, />Share link<\/p>/);
-  assert.match(body, /All done\. Share the link below\./);
-  assert.match(body, /Opening this link shows the question and the No! reply\./);
+  assert.match(body, /aria-label="WhatsApp"/);
+  assert.match(body, />Share the link below\./);
+  assert.match(body, /Try another answer/);
   assert.match(body, /type="module" src="\/app\.js"/);
   assert.doesNotMatch(body, /type="radio"/);
 });
@@ -380,16 +397,13 @@ test('serves the random UI at /random', async () => {
 
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type'), /^text\/html/);
-  assert.match(body, /<title>YESorNOaaS - Random<\/title>/);
-  assert.match(body, /<body data-answer="random">/);
-  assert.match(body, /<h1 id="title">Ask a yes\/no question and get a random Yes! or No! response<\/h1>/);
-  assert.match(body, /aria-label="Other YESorNOaaS answer modes"/);
-  assert.match(body, /Get a &quot;Yes!&quot; replay/);
-  assert.match(body, /Get a &quot;No!&quot; replay/);
-  assert.doesNotMatch(body, /Get a random replay/);
+  assert.match(body, /<title>YESorNOaaS<\/title>/);
+  assert.match(body, /<body data-mode="random">/);
+  assert.match(body, /id="page-heading"/);
+  assert.match(body, /aria-label="Other answers"/);
+  assert.match(body, /id="replays"/);
   assert.match(body, /Ask a yes\/no question/);
-  assert.match(body, />Ask for Random!<\/button>/);
-  assert.match(body, /Opening this link shows the question and a new random Yes! or No! reply\./);
+  assert.match(body, />Ask<\/span>/);
   assert.match(body, /type="module" src="\/app\.js"/);
 });
 
@@ -512,26 +526,24 @@ test('returns a selected answer for every documented /api/random method', async 
   }
 });
 
-test('returns 404 hint for /api without a yes or no suffix', async () => {
+test('returns the 404 page for unknown API routes', async () => {
   const response = await fetch(`${baseUrl}/api`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ answer: 'yes', nested: { still: true } })
   });
 
-  assert.equal(response.status, 404);
-  assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+  await assertNotFoundPage(response);
 });
 
-test('returns 404 hint for other HTTP methods on unknown paths', async () => {
+test('returns the 404 page for other HTTP methods on unknown paths', async () => {
   for (const method of ['PUT', 'PATCH', 'DELETE']) {
     const response = await fetch(`${baseUrl}/nope`, {
       method,
       body: method === 'DELETE' ? undefined : 'whatever'
     });
 
-    assert.equal(response.status, 404);
-    assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+    await assertNotFoundPage(response);
   }
 });
 
@@ -817,8 +829,7 @@ test('server entrypoint starts when executed directly', async () => {
   assert.ok(portMatch);
 
   const response = await fetch(`http://127.0.0.1:${portMatch[1]}/anything`);
-  assert.equal(response.status, 404);
-  assert.equal(await response.text(), UNKNOWN_ROUTE_HINT);
+  await assertNotFoundPage(response);
 
   const closed = new Promise((resolvePromise) => child.on('close', resolvePromise));
 

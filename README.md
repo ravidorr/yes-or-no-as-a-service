@@ -10,8 +10,8 @@ curl http://localhost:3000/api/no      # No!
 curl http://localhost:3000/api/random  # Yes! or No!
 ```
 
-Unknown paths return `404 text/plain` with a hint. Rate-limited requests return
-`429` with the same hint.
+Unknown paths return the HTML 404 page. Rate-limited requests return `429`
+with a route hint.
 
 ## Requirements
 
@@ -49,7 +49,7 @@ The API listens on `http://localhost:3000` by default.
 
 The yes UI is at `http://localhost:3000/yes`, the no UI is at
 `http://localhost:3000/no`, and the random UI is at
-`http://localhost:3000/random`. The root path returns `404` with the route hint.
+`http://localhost:3000/random`. The root path returns the 404 page.
 Use `?request=` on any answer page to open a shareable YESorNOaaS flow that types
 and submits the request automatically. Long shared requests are entered
 immediately instead of being animated character by character. Legacy root share
