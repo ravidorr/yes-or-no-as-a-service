@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.2 - 2026-10-06
+
+- Add a GitHub Sponsors funding link for the project.
+
 ## 2.1.1 - 2026-10-06
 
 - Update the HTML validator development dependency.
