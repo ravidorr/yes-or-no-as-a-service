@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.3 - 2026-10-06
+
+- Align Yes and No answer panel colors and correct the email share icon.
+
 ## 2.1.2 - 2026-10-06
 
 - Add a GitHub Sponsors funding link for the project.
