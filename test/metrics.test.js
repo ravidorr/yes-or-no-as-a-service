@@ -176,13 +176,28 @@ test('middleware decrements in-flight gauge when the client disconnects early', 
 
   try {
     await new Promise((resolve) => {
+      let settled = false;
+
+      function finish() {
+        if (settled) {
+          return;
+        }
+
+        settled = true;
+        resolve();
+      }
+
       const client = httpRequest(`${baseUrl}/slow`, (response) => {
         response.on('data', () => {});
-        client.destroy();
-        resolve();
       });
 
-      client.on('error', () => resolve());
+      client.on('error', finish);
+      client.on('socket', () => {
+        setTimeout(() => {
+          client.destroy();
+          finish();
+        }, 10);
+      });
       client.end();
     });
 

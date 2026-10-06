@@ -2,8 +2,24 @@ import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import process from 'node:process';
 import { isExecutedModule } from '../src/run-if-main.js';
 import { assertValidStagedPath, execGit } from './git-exec.mjs';
+
+export function resolveNpmExecutable(platform = process.platform) {
+  return platform === 'win32' ? 'npm.cmd' : 'npm';
+}
+
+export function execNpm(
+  args,
+  options = {},
+  { execFileSyncImpl = execFileSync, platform = process.platform } = {}
+) {
+  return execFileSyncImpl(resolveNpmExecutable(platform), args, {
+    ...options,
+    ...(platform === 'win32' ? { shell: true } : {})
+  });
+}
 
 export function listStagedFiles({ execGitImpl = execGit } = {}) {
   const output = execGitImpl(['diff', '--cached', '--name-only']);
@@ -23,12 +39,15 @@ export function readStagedFileContent(filePath, { execGitImpl = execGit } = {}) 
   return execGitImpl(['show', `:${filePath}`]);
 }
 
-export function generatePackageLockFromManifest(manifestContents) {
+export function generatePackageLockFromManifest(
+  manifestContents,
+  { execNpmImpl = execNpm } = {}
+) {
   const tempDir = mkdtempSync(join(tmpdir(), 'yesornoaas-lock-sync-'));
 
   try {
     writeFileSync(join(tempDir, 'package.json'), manifestContents);
-    execFileSync('npm', ['install', '--package-lock-only', '--ignore-scripts'], {
+    execNpmImpl(['install', '--package-lock-only', '--ignore-scripts'], {
       cwd: tempDir,
       stdio: 'pipe'
     });
