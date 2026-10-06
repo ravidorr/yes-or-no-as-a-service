@@ -4,10 +4,9 @@ YESorNOaaS is a small open source project. This policy describes how the project
 
 ## Summary
 
-YESorNOaaS does not collect, store, sell, or track end users in the application itself.
-
-We do not use accounts, analytics, advertising trackers, or cookies for tracking
-end users.
+YESorNOaaS does not require accounts or collect names, email addresses, or other
+direct identifiers. Operators can optionally enable Pendo analytics for an
+official deployment by configuring `PENDO_PUBLIC_APP_ID`.
 
 ## What YESorNOaaS does
 
@@ -15,6 +14,20 @@ When you run YESorNOaaS locally or deploy it yourself, the service responds to r
 
 Shared links include the request text in the URL query string. Browser history,
 referrer headers, proxy logs, and similar infrastructure may retain that URL.
+
+## Optional Pendo analytics
+
+When an operator configures `PENDO_PUBLIC_APP_ID`, the web UI loads Pendo to
+record anonymous page and interaction usage. Pendo creates or reuses an
+anonymous browser identifier through first-party cookies or local storage.
+
+Pendo is disabled by default. It is not included in local development, CI, or
+self-hosted deployments unless the operator explicitly configures
+`PENDO_PUBLIC_APP_ID`.
+
+The Pendo configuration excludes the `request` query parameter and ignores the
+share controls containing shared-link URLs, so question text is not sent to
+Pendo through captured URLs or share interactions.
 
 ## User-initiated sharing
 
@@ -31,8 +44,6 @@ YESorNOaaS does not and will not:
 
 - require user accounts
 - collect names, email addresses, or contact details
-- collect user analytics or behavioral telemetry in the application
-- set tracking cookies
 - sell personal data to third parties
 
 ## Third-party services

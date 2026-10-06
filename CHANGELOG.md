@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.0 - 2026-10-06
+
+- Support opt-in Novus by Pendo analytics for configured deployments, excluding
+  shared question text from captured URLs and share interactions.
+- Load an optional local `.env` file with `npm start` and add Docker Compose
+  startup for local development.
+
 ## 2.1.5 - 2026-10-06
 
 - Harden release scripts against shell injection, improve shutdown and healthcheck reliability, add security headers, validate theme bootstrap storage, and expand behavioral test coverage from the code review.

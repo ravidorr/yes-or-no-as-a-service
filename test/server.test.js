@@ -7,6 +7,7 @@ import { pathToFileURL } from 'node:url';
 import packageInfo from '../package.json' with { type: 'json' };
 import {
   app,
+  createPendoSnippet,
   createApp,
   parseListenPort,
   resolveListenPort,
@@ -304,6 +305,7 @@ test('serves the yes UI at /yes', async () => {
   assert.match(body, /Ask a yes\/no question/);
   assert.match(body, />Ask<\/span>/);
   assert.match(body, /id="share-url"/);
+  assert.match(body, /<section id="share" class="share pendo-ignore" hidden>/);
   assert.match(body, /id="copy"/);
   assert.match(body, />Copy link<\/span>/);
   assert.match(body, /id="preview"/);
@@ -329,6 +331,46 @@ test('serves the yes UI at /yes', async () => {
   assert.match(body, /id="answer"/);
   assert.match(body, /type="module" src="\/app\.js"/);
   assert.doesNotMatch(body, /type="radio"/);
+  assert.doesNotMatch(body, /cdn\.pendo\.io/);
+  assert.doesNotMatch(body, /__PENDO_SNIPPET__/);
+});
+
+test('creates Pendo markup only for a valid public app ID', () => {
+  const markup = createPendoSnippet('cd612b6e-f576-4f2f-9d59-d35cf9ffe16f');
+
+  assert.match(markup, /cdn\.pendo\.io\/agent\/static/);
+  assert.match(markup, /cd612b6e-f576-4f2f-9d59-d35cf9ffe16f/);
+  assert.match(markup, /action: 'ExcludeKeys'/);
+  assert.match(markup, /data: \['request'\]/);
+  assert.equal(createPendoSnippet(), '');
+  assert.equal(createPendoSnippet(123), '');
+  assert.equal(createPendoSnippet('not-a-public-app-id'), '');
+});
+
+test('loads Pendo only when the application is configured', async () => {
+  const pendoApp = createApp({
+    pendoPublicAppId: 'cd612b6e-f576-4f2f-9d59-d35cf9ffe16f'
+  });
+  const pendoServer = pendoApp.listen(0);
+
+  await new Promise((resolvePromise) => pendoServer.once('listening', resolvePromise));
+
+  const { port } = pendoServer.address();
+
+  try {
+    for (const route of ['/yes', '/no', '/random', '/missing']) {
+      const response = await fetch(`http://127.0.0.1:${port}${route}`);
+      const body = await response.text();
+
+      assert.match(body, /cdn\.pendo\.io\/agent\/static/);
+      assert.match(body, /action: 'ExcludeKeys'/);
+      assert.match(body, /data: \['request'\]/);
+    }
+  } finally {
+    await new Promise((resolvePromise, reject) => {
+      pendoServer.close((error) => (error ? reject(error) : resolvePromise()));
+    });
+  }
 });
 
 test('does not serve the unconfigured page template as a static asset', async () => {

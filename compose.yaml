@@ -1,0 +1,10 @@
+services:
+  yesornoaas:
+    build: .
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PORT: "3000"
+    ports:
+      - "3000:3000"

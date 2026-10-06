@@ -1,6 +1,6 @@
 {
   "name": "@ravidor/yesornoaas",
-  "version": "2.1.5",
+  "version": "2.2.0",
   "description": "Yes or No as a Service: call /api/yes, /api/no, or /api/random for Yes! or No!",
   "license": "MIT",
   "funding": {
@@ -46,7 +46,7 @@
     "prepare": "node scripts/prepare-husky.mjs",
     "pretest": "node scripts/sync-theme-bootstrap.mjs",
     "prepublishOnly": "npm run test:coverage",
-    "start": "node src/server.js",
+    "start": "node --env-file-if-exists=.env src/server.js",
     "test": "node --test",
     "test:coverage": "node scripts/run-coverage.mjs",
     "test:e2e": "playwright test",
@@ -64,7 +64,7 @@
     "express-rate-limit": "^8.7.0"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.9.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
