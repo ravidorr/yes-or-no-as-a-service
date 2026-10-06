@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.0 - 2026-10-06
+
+- Load the Pendo web agent on the Yes, No, and Random pages to collect usage for
+  their Novus page mappings.
+
 ## 2.1.5 - 2026-10-06
 
 - Harden release scripts against shell injection, improve shutdown and healthcheck reliability, add security headers, validate theme bootstrap storage, and expand behavioral test coverage from the code review.
