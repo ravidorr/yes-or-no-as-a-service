@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.4 - 2026-10-06
+
+- Enforce 100% unit test coverage for all production JavaScript in `src/`, `public/`, and `scripts/`.
+
 ## 2.1.3 - 2026-10-06
 
 - Align Yes and No answer panel colors and correct the email share icon.
