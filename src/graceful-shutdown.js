@@ -1,9 +1,13 @@
-import { DEFAULT_READINESS_GRACE_MS } from './shutdown-config.js';
+import {
+  DEFAULT_FORCE_EXIT_GRACE_MS,
+  DEFAULT_READINESS_GRACE_MS
+} from './shutdown-config.js';
 
 export function createGracefulShutdown({
   server,
   timeoutMs,
   readinessGraceMs = DEFAULT_READINESS_GRACE_MS,
+  forceExitGraceMs = DEFAULT_FORCE_EXIT_GRACE_MS,
   processRef = process,
   setTimeoutFn = setTimeout,
   clearTimeoutFn = clearTimeout,
@@ -15,6 +19,7 @@ export function createGracefulShutdown({
   let shutdownStarted = false;
   let readinessTimerId;
   let deadlineTimerId;
+  let forceExitTimerId;
 
   function isDraining() {
     return draining;
@@ -30,22 +35,31 @@ export function createGracefulShutdown({
       clearTimeoutFn(deadlineTimerId);
       deadlineTimerId = undefined;
     }
+
+    if (forceExitTimerId !== undefined) {
+      clearTimeoutFn(forceExitTimerId);
+      forceExitTimerId = undefined;
+    }
   }
 
-  function finishShutdown() {
+  function finishShutdown(exitCode = 0) {
     clearTimers();
     log('Graceful shutdown complete');
-    exit(0);
+    exit(exitCode);
   }
 
   function forceCloseRemainingConnections() {
     log(`Shutdown timeout of ${timeoutMs}ms reached, force-closing remaining connections`);
     server.closeAllConnections();
+    forceExitTimerId = setTimeoutFn(() => {
+      error('Server close callback did not complete after force-close; exiting');
+      finishShutdown(1);
+    }, forceExitGraceMs);
   }
 
   function beginClosingConnections() {
     server.close(() => {
-      finishShutdown();
+      finishShutdown(0);
     });
     server.closeIdleConnections();
   }
@@ -62,6 +76,9 @@ export function createGracefulShutdown({
 
     log(`Received ${signal}, starting graceful shutdown`);
 
+    // Phase 1: mark draining so /health returns 503, then wait for probes to notice.
+    // Phase 2: close idle connections and stop accepting new work.
+    // Phase 3: force-close any stragglers, then exit even if close() never callbacks.
     if (readinessGraceMs === 0) {
       beginClosingConnections();
     } else {

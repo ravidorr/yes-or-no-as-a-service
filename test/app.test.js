@@ -264,6 +264,23 @@ test('initializeApp enables submit when the request has text', () => {
   assert.equal(localThis.elements.submitButton.disabled, false);
 });
 
+test('initializeApp uses random share URLs and social copy', async () => {
+  const localThis = createAppFixture({
+    mode: 'random',
+    locationHref: 'https://example.test/random'
+  });
+  initializeFixture(localThis);
+
+  localThis.elements.input.value = 'Maybe?';
+  localThis.elements.input.listeners.input();
+  await localThis.elements.form.listeners.submit({ preventDefault() {} });
+
+  assert.match(localThis.elements.shareUrl.value, /\/random\?request=Maybe/);
+  assert.match(localThis.elements.shareXLink.href, /twitter\.com/);
+  assert.match(decodeURIComponent(localThis.elements.shareXLink.href), /randomly answer/);
+  assert.match(localThis.replayLinks[1].href, /\/random\?request=Maybe/);
+});
+
 test('initializeApp shows a successful answer and share links', async () => {
   const localThis = createAppFixture();
   initializeFixture(localThis);

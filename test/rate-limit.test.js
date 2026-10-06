@@ -5,6 +5,22 @@ import { createApp } from '../src/server.js';
 
 const strictRateLimitConfig = { windowMs: 60_000, max: 2 };
 
+async function waitForSuccessfulRequest(url, { timeoutMs = 500, intervalMs = 5 } = {}) {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const response = await fetch(url);
+
+    if (response.status === 200) {
+      return response;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+
+  throw new Error(`Timed out waiting for 200 from ${url}`);
+}
+
 async function startServer(app) {
   const server = app.listen(0);
   await new Promise((resolve) => server.once('listening', resolve));
@@ -280,9 +296,8 @@ test('allows requests again after the configured window elapses', async () => {
     const throttled = await fetch(`${baseUrl}/api/no`);
     assert.equal(throttled.status, 429);
 
-    await new Promise((resolve) => setTimeout(resolve, 150));
+    const afterWindow = await waitForSuccessfulRequest(`${baseUrl}/api/no`, { timeoutMs: 500 });
 
-    const afterWindow = await fetch(`${baseUrl}/api/no`);
     assert.equal(afterWindow.status, 200);
   } finally {
     await close();

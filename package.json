@@ -1,6 +1,6 @@
 {
   "name": "@ravidor/yesornoaas",
-  "version": "2.1.4",
+  "version": "2.1.5",
   "description": "Yes or No as a Service: call /api/yes, /api/no, or /api/random for Yes! or No!",
   "license": "MIT",
   "funding": {
@@ -44,6 +44,7 @@
   "scripts": {
     "mcp": "node src/mcp.js",
     "prepare": "node scripts/prepare-husky.mjs",
+    "pretest": "node scripts/sync-theme-bootstrap.mjs",
     "prepublishOnly": "npm run test:coverage",
     "start": "node src/server.js",
     "test": "node --test",

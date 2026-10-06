@@ -183,6 +183,13 @@ test('readChangedFilesSince skips a rename within workflows', () => {
   }
 });
 
+test('readPackageVersionAtRef rejects invalid git refs', () => {
+  assert.throws(
+    () => readPackageVersionAtRef('origin/main; rm -rf /'),
+    /Invalid git ref/
+  );
+});
+
 test('readPackageVersionAtRef reads the committed HEAD version', () => {
   const headVersion = readPackageVersionAtRef('HEAD');
   const committedVersion = JSON.parse(

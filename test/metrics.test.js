@@ -5,6 +5,22 @@ import { request as httpRequest } from 'node:http';
 import { test } from 'node:test';
 import { createMetrics, normalizeRoute } from '../src/metrics.js';
 
+async function waitForMetric(metrics, pattern, { timeoutMs = 200, intervalMs = 5 } = {}) {
+  const deadline = Date.now() + timeoutMs;
+
+  while (Date.now() < deadline) {
+    const text = await metrics.metrics();
+
+    if (pattern.test(text)) {
+      return text;
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, intervalMs));
+  }
+
+  throw new Error(`Timed out waiting for metric matching ${pattern}`);
+}
+
 async function startApp(configure) {
   const app = express();
   configure(app);
@@ -162,19 +178,18 @@ test('middleware decrements in-flight gauge when the client disconnects early', 
     await new Promise((resolve) => {
       const client = httpRequest(`${baseUrl}/slow`, (response) => {
         response.on('data', () => {});
+        client.destroy();
+        resolve();
       });
 
       client.on('error', () => resolve());
       client.end();
-      setTimeout(() => {
-        client.destroy();
-        resolve();
-      }, 20);
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 50));
-
-    const text = await metrics.metrics();
+    const text = await waitForMetric(
+      metrics,
+      /yesornoaas_http_requests_in_flight\{route="not_found",method="GET"\} 0/
+    );
 
     assert.match(text, /yesornoaas_http_requests_in_flight\{route="not_found",method="GET"\} 0/);
   } finally {

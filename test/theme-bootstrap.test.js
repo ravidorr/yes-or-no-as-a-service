@@ -3,7 +3,12 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { runInThisContext } from 'node:vm';
 import { test } from 'node:test';
-import { bootstrapTheme, bootstrapThemeIfBrowser } from '../public/theme-bootstrap-core.js';
+import {
+  bootstrapTheme,
+  bootstrapThemeIfBrowser,
+  renderThemeBootstrapScript
+} from '../public/theme-bootstrap-core.js';
+import { syncThemeBootstrap } from '../scripts/sync-theme-bootstrap.mjs';
 
 const themeBootstrapPath = resolve('public/theme-bootstrap.js');
 const themeBootstrapSource = readFileSync(themeBootstrapPath, 'utf8');
@@ -65,6 +70,31 @@ test('bootstrapTheme applies a stored theme', () => {
   assert.equal(localThis.document.documentElement.attributes['data-theme'], 'dark');
 });
 
+test('bootstrapTheme ignores invalid stored themes', () => {
+  const localThis = {
+    document: {
+      documentElement: {
+        attributes: {},
+        setAttribute(name, value) {
+          this.attributes[name] = value;
+        }
+      }
+    },
+    storage: {
+      getItem() {
+        return 'neon';
+      }
+    }
+  };
+
+  bootstrapTheme({
+    document: localThis.document,
+    storage: localThis.storage
+  });
+
+  assert.equal(localThis.document.documentElement.attributes['data-theme'], undefined);
+});
+
 test('bootstrapTheme skips missing themes', () => {
   const localThis = {
     document: {
@@ -114,6 +144,20 @@ test('bootstrapTheme ignores storage failures', () => {
     })
   );
   assert.equal(localThis.document.documentElement.attributes['data-theme'], undefined);
+});
+
+test('syncThemeBootstrap writes the generated classic bootstrap script', () => {
+  const localThis = {
+    contents: null
+  };
+
+  syncThemeBootstrap({
+    writeFileSyncImpl: (_path, contents) => {
+      localThis.contents = contents;
+    }
+  });
+
+  assert.equal(localThis.contents, renderThemeBootstrapScript());
 });
 
 test('theme-bootstrap.js restores a stored theme synchronously in the browser', () => {

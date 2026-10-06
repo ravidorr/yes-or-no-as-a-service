@@ -17,6 +17,21 @@ test('initialize404PageIfBrowser runs in browser contexts', () => {
   assert.equal(localThis.called, true);
 });
 
+test('initialize404PageIfBrowser skips initialization outside browser contexts', () => {
+  const localThis = {
+    called: false
+  };
+
+  initialize404PageIfBrowser({
+    isBrowserContextImpl: () => false,
+    initializeThemeToggleImpl: () => {
+      localThis.called = true;
+    }
+  });
+
+  assert.equal(localThis.called, false);
+});
+
 test('initialize404Page delegates to the theme initializer', () => {
   const localThis = {
     called: false

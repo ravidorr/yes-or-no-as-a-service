@@ -50,6 +50,10 @@ See the README for configuration details.
 
 ### Reverse proxies and rate limiting
 
+Rate limits are enforced in memory inside each Node.js process. Horizontal
+scaling gives every replica its own bucket, so effective limits scale with the
+number of running instances unless you add a shared store (see ROADMAP.md).
+
 Behind a reverse proxy or ingress, set `TRUST_PROXY` so rate limits key on the
 client IP from `X-Forwarded-For` instead of the proxy IP. Without it, all
 clients may share one bucket or limits may be ineffective.

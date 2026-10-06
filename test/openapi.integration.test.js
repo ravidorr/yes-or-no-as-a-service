@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { parse as parseYaml } from 'yaml';
 import packageInfo from '../package.json' with { type: 'json' };
+import { UNKNOWN_ROUTE_HINT } from '../src/responses.js';
 import { app, createApp } from '../src/server.js';
 
 const openApiDocument = parseYaml(readFileSync(resolve('public/openapi.yaml'), 'utf8'));
@@ -80,4 +81,25 @@ test('live endpoints match the OpenAPI response contracts', async () => {
   assert.equal(unknownResponse.status, 404);
   assert.match(unknownResponse.headers.get('content-type'), /^text\/html/);
   assert.match(await unknownResponse.text(), /<body data-mode="404">/);
+});
+
+test('live throttled responses match the OpenAPI 429 contract', async () => {
+  const throttledApp = createApp({ rateLimitConfig: { windowMs: 60_000, max: 1 } });
+  const throttledServer = throttledApp.listen(0);
+  await new Promise((resolvePromise) => throttledServer.once('listening', resolvePromise));
+  const throttledBaseUrl = `http://127.0.0.1:${throttledServer.address().port}`;
+
+  try {
+    const first = await fetch(`${throttledBaseUrl}/unknown-path`);
+    assert.equal(first.status, 404);
+
+    const throttled = await fetch(`${throttledBaseUrl}/unknown-path`);
+    assert.equal(throttled.status, 429);
+    assert.equal(throttled.headers.get('content-type'), 'text/plain; charset=utf-8');
+    assert.equal(await throttled.text(), UNKNOWN_ROUTE_HINT);
+  } finally {
+    await new Promise((resolvePromise, reject) => {
+      throttledServer.close((error) => (error ? reject(error) : resolvePromise()));
+    });
+  }
 });

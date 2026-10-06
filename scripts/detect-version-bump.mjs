@@ -14,6 +14,7 @@ export function detectVersionBump(
     extractChangelogSectionImpl = extractChangelogSection
   } = {}
 ) {
+  // GitHub Actions uses an all-zero before SHA on the first push to a branch.
   if (!beforeRef || /^0+$/.test(beforeRef)) {
     return { bumped: false, reason: 'no-before-sha' };
   }

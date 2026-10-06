@@ -44,7 +44,7 @@ test('runVerifyReleaseNotes exits when the base ref is missing', () => {
 
   runVerifyReleaseNotes({
     argv: ['node', 'script', '--base', 'origin/missing'],
-    execSyncImpl: () => {
+    execGitImpl: () => {
       throw new Error('missing ref');
     },
     stderr: {
@@ -69,7 +69,7 @@ test('runVerifyReleaseNotes reports validation failures', () => {
 
   runVerifyReleaseNotes({
     argv: ['node', 'script', '--base', 'origin/main'],
-    execSyncImpl: () => 'abc123',
+    execGitImpl: () => 'abc123',
     verifyReleaseNotesAgainstBaseImpl: () => ['package.json version must be bumped'],
     stderr: {
       write(value) {
@@ -94,7 +94,7 @@ test('runVerifyReleaseNotesCliIfMain delegates to the verifier', () => {
   runVerifyReleaseNotesCliIfMain({
     isExecutedModuleImpl: () => true,
     argv: ['node', 'script', '--base', 'origin/main'],
-    execSyncImpl: () => 'abc123',
+    execGitImpl: () => 'abc123',
     verifyReleaseNotesAgainstBaseImpl: () => [],
     stderr: { write() {} },
     stdout: {
@@ -116,7 +116,7 @@ test('runVerifyReleaseNotes succeeds when validation passes', () => {
 
   const result = runVerifyReleaseNotes({
     argv: ['node', 'script', '--base', 'origin/main'],
-    execSyncImpl: () => 'abc123',
+    execGitImpl: () => 'abc123',
     verifyReleaseNotesAgainstBaseImpl: () => [],
     stderr: { write() {} },
     stdout: {

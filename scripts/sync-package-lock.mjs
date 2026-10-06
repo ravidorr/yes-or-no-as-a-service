@@ -1,11 +1,12 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { isExecutedModule } from '../src/run-if-main.js';
+import { assertValidStagedPath, execGit } from './git-exec.mjs';
 
-export function listStagedFiles() {
-  const output = execSync('git diff --cached --name-only', { encoding: 'utf8' });
+export function listStagedFiles({ execGitImpl = execGit } = {}) {
+  const output = execGitImpl(['diff', '--cached', '--name-only']);
 
   return output
     .split('\n')
@@ -17,19 +18,17 @@ export function shouldSyncPackageLock(stagedFiles) {
   return stagedFiles.includes('package.json');
 }
 
-export function readStagedFileContent(filePath) {
-  return execSync(`git show :${filePath}`, { encoding: 'utf8' });
+export function readStagedFileContent(filePath, { execGitImpl = execGit } = {}) {
+  assertValidStagedPath(filePath);
+  return execGitImpl(['show', `:${filePath}`]);
 }
 
-export function generatePackageLockFromManifest(
-  manifestContents,
-  { execSyncImpl = execSync } = {}
-) {
+export function generatePackageLockFromManifest(manifestContents) {
   const tempDir = mkdtempSync(join(tmpdir(), 'yesornoaas-lock-sync-'));
 
   try {
     writeFileSync(join(tempDir, 'package.json'), manifestContents);
-    execSyncImpl('npm install --package-lock-only --ignore-scripts', {
+    execFileSync('npm', ['install', '--package-lock-only', '--ignore-scripts'], {
       cwd: tempDir,
       stdio: 'pipe'
     });
@@ -41,17 +40,17 @@ export function generatePackageLockFromManifest(
 }
 
 export function syncPackageLock({
-  execSyncImpl = execSync,
+  execGitImpl = execGit,
   readStagedFileContentImpl = readStagedFileContent,
   writeFileSyncImpl = writeFileSync,
   resolveImpl = resolve,
   generatePackageLockFromManifestImpl = generatePackageLockFromManifest
 } = {}) {
-  const manifestContents = readStagedFileContentImpl('package.json');
-  const lockfile = generatePackageLockFromManifestImpl(manifestContents, { execSyncImpl });
+  const manifestContents = readStagedFileContentImpl('package.json', { execGitImpl });
+  const lockfile = generatePackageLockFromManifestImpl(manifestContents);
 
   writeFileSyncImpl(resolveImpl('package-lock.json'), lockfile);
-  execSyncImpl('git add package-lock.json', { stdio: 'inherit' });
+  execGitImpl(['add', 'package-lock.json'], { stdio: 'inherit' });
 }
 
 export function runSyncPackageLockCli(options = {}) {

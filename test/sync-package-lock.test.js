@@ -45,8 +45,8 @@ test('syncPackageLock writes and stages the regenerated lockfile', () => {
       localThis.writtenContents = contents;
     },
     resolveImpl: (path) => `/repo/${path}`,
-    execSyncImpl: (command) => {
-      if (command === 'git add package-lock.json') {
+    execGitImpl: (args) => {
+      if (args[0] === 'add' && args[1] === 'package-lock.json') {
         localThis.staged = true;
       }
     }
@@ -70,7 +70,7 @@ test('runSyncPackageLockCliIfMain delegates to the sync runner', () => {
       localThis.called = true;
     },
     resolveImpl: (path) => path,
-    execSyncImpl: () => {}
+    execGitImpl: () => {}
   });
 
   assert.equal(localThis.called, true);
