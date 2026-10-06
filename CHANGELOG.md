@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.2 - 2026-10-06
+
+- Document the official Render-hosted YESorNOaaS demo and health check.
+
 ## 2.2.1 - 2026-10-06
 
 - Add Pendo Track Events to the web UI for answered questions, shared-link
