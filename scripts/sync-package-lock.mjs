@@ -2,7 +2,7 @@ import { execSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { isExecutedModule } from '../src/run-if-main.js';
 
 export function listStagedFiles() {
   const output = execSync('git diff --cached --name-only', { encoding: 'utf8' });
@@ -40,14 +40,31 @@ export function generatePackageLockFromManifest(
   }
 }
 
-export function syncPackageLock({ execSyncImpl = execSync } = {}) {
-  const manifestContents = readStagedFileContent('package.json');
-  const lockfile = generatePackageLockFromManifest(manifestContents, { execSyncImpl });
+export function syncPackageLock({
+  execSyncImpl = execSync,
+  readStagedFileContentImpl = readStagedFileContent,
+  writeFileSyncImpl = writeFileSync,
+  resolveImpl = resolve,
+  generatePackageLockFromManifestImpl = generatePackageLockFromManifest
+} = {}) {
+  const manifestContents = readStagedFileContentImpl('package.json');
+  const lockfile = generatePackageLockFromManifestImpl(manifestContents, { execSyncImpl });
 
-  writeFileSync(resolve('package-lock.json'), lockfile);
+  writeFileSyncImpl(resolveImpl('package-lock.json'), lockfile);
   execSyncImpl('git add package-lock.json', { stdio: 'inherit' });
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
-  syncPackageLock();
+export function runSyncPackageLockCli(options = {}) {
+  return syncPackageLock(options);
 }
+
+export function runSyncPackageLockCliIfMain({
+  isExecutedModuleImpl = isExecutedModule,
+  ...options
+} = {}) {
+  if (isExecutedModuleImpl(import.meta.url)) {
+    runSyncPackageLockCli(options);
+  }
+}
+
+runSyncPackageLockCliIfMain();

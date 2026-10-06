@@ -82,7 +82,7 @@ test('CLI without arguments exits with usage on stderr', () => {
 });
 
 test('CLI with invalid subcommand exits with usage on stderr', () => {
-  const result = spawnSync(process.execPath, [cliPath, 'maybe'], { encoding: 'utf8' });
+  const result = spawnSync(process.execPath, [cliPath, 'invalid'], { encoding: 'utf8' });
 
   assert.equal(result.status, 1);
   assert.equal(result.stdout, '');

@@ -1,22 +1,30 @@
 import { readdirSync } from 'node:fs';
-import { join, relative, sep } from 'node:path';
+import { join, sep } from 'node:path';
+
+export const PRODUCTION_DIRECTORIES = ['src', 'public', 'scripts'];
+
+const PRODUCTION_FILE_PATTERN = /\.(?:js|mjs)$/;
 
 export function normalizePath(path) {
   return path.split(sep).join('/');
 }
 
-export function listSourceFiles(directory = 'src') {
+export function listJsFilesInDirectory(directory) {
   const entries = readdirSync(directory, { withFileTypes: true });
 
   return entries.flatMap((entry) => {
     const path = join(directory, entry.name);
 
     if (entry.isDirectory()) {
-      return listSourceFiles(path);
+      return listJsFilesInDirectory(path);
     }
 
-    return entry.name.endsWith('.js') ? [normalizePath(relative('src', path))] : [];
+    return PRODUCTION_FILE_PATTERN.test(entry.name) ? [normalizePath(path)] : [];
   });
+}
+
+export function listSourceFiles(directories = PRODUCTION_DIRECTORIES) {
+  return directories.flatMap((directory) => listJsFilesInDirectory(directory));
 }
 
 const COVERAGE_REPORT_PREFIX = '[#ℹ]';
@@ -36,16 +44,31 @@ export function extractCoverageReport(output) {
   return output.slice(startMatch.index, endMatch.index);
 }
 
+const COVERAGE_DIRECTORY_PATTERN = new RegExp(
+  `^${COVERAGE_REPORT_PREFIX} (src|public|scripts)\\s+\\|`
+);
+const COVERAGE_FILE_PATTERN = new RegExp(
+  `^${COVERAGE_REPORT_PREFIX} {2}([A-Za-z0-9._-]+\\.(?:js|mjs))\\s+\\|`
+);
+
 export function parseCoverageFiles(output) {
   const files = new Set();
   const report = extractCoverageReport(output);
-  const rowPattern = new RegExp(
-    `^${COVERAGE_REPORT_PREFIX} {2}([A-Za-z0-9._/-]+\\.js)\\s+\\|`,
-    'gm'
-  );
+  let currentDirectory = null;
 
-  for (const match of report.matchAll(rowPattern)) {
-    files.add(normalizePath(match[1].trim()));
+  for (const line of report.split('\n')) {
+    const directoryMatch = line.match(COVERAGE_DIRECTORY_PATTERN);
+
+    if (directoryMatch) {
+      currentDirectory = directoryMatch[1];
+      continue;
+    }
+
+    const fileMatch = line.match(COVERAGE_FILE_PATTERN);
+
+    if (fileMatch && currentDirectory) {
+      files.add(normalizePath(`${currentDirectory}/${fileMatch[1].trim()}`));
+    }
   }
 
   return files;

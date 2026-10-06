@@ -13,11 +13,16 @@ import {
   readChangelogAtRef,
   readPackageVersionAtRef,
   shouldValidateReleaseNotes,
-  validateReleaseNotes
+  validateReleaseNotes,
+  verifyReleaseNotesAgainstBase
 } from '../scripts/release-notes.mjs';
 
 test('parseVersion reads semver triples', () => {
   assert.deepEqual(parseVersion('1.2.3'), [1, 2, 3]);
+});
+
+test('parseVersion rejects invalid semver values', () => {
+  assert.throws(() => parseVersion('not-a-version'), /Invalid semver/);
 });
 
 test('compareVersions detects newer versions', () => {
@@ -54,6 +59,15 @@ test('extractChangelogSection returns the release body for a version', () => {
   assert.equal(
     extractChangelogSection(changelog, '0.2.0'),
     '- Publish to npm.\n- Automate releases.'
+  );
+});
+
+test('extractChangelogSection rejects headings that do not start a line', () => {
+  const changelog = 'See ## 0.2.0 - 2026-10-01 for details.\n\n- Hidden release note.';
+
+  assert.throws(
+    () => extractChangelogSection(changelog, '0.2.0'),
+    /no release entry/
   );
 });
 
@@ -176,6 +190,27 @@ test('readPackageVersionAtRef reads the committed HEAD version', () => {
   ).version;
 
   assert.equal(headVersion, committedVersion);
+});
+
+test('verifyReleaseNotesAgainstBase skips workflow-only changes', () => {
+  const errors = verifyReleaseNotesAgainstBase('origin/main', {
+    readChangedFilesSinceImpl: () => ['.github/workflows/ci.yml'],
+    shouldValidateReleaseNotesImpl: shouldValidateReleaseNotes
+  });
+
+  assert.deepEqual(errors, []);
+});
+
+test('verifyReleaseNotesAgainstBase validates changed production files', () => {
+  const errors = verifyReleaseNotesAgainstBase('origin/main', {
+    readChangedFilesSinceImpl: () => ['src/server.js'],
+    shouldValidateReleaseNotesImpl: shouldValidateReleaseNotes,
+    readPackageVersionAtRefImpl: (ref) => (ref === 'HEAD' ? '0.1.0' : '0.1.0'),
+    readChangelogAtRefImpl: () => '# Changelog\n',
+    validateReleaseNotesImpl: validateReleaseNotes
+  });
+
+  assert.match(errors.join('\n'), /must be bumped above 0\.1\.0/);
 });
 
 test('readChangelogAtRef reads the committed HEAD changelog', () => {

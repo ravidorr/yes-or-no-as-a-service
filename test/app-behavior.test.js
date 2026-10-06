@@ -140,6 +140,36 @@ test('submitAnswerRequest shows the no response on success', async () => {
   assert.equal(localThis.fetchCalls[0].url, '/api/no');
 });
 
+test('submitAnswerRequest shows unavailable when the API returns a non-OK response', async () => {
+  const localThis = {
+    current: true,
+    unavailable: false
+  };
+
+  await submitAnswerRequest({
+    answer: 'yes',
+    submittedText: 'Can I?',
+    isCurrentRequest: () => localThis.current,
+    fetch: async () => ({
+      ok: false,
+      status: 503,
+      async text() {
+        return 'Unavailable';
+      }
+    }),
+    AbortController: MockAbortController,
+    setTimeout: () => 1,
+    clearTimeout: () => {},
+    onSuccess: () => {},
+    onTimeout: () => {},
+    onUnavailable: () => {
+      localThis.unavailable = true;
+    }
+  });
+
+  assert.equal(localThis.unavailable, true);
+});
+
 test('submitAnswerRequest shows unavailable when fetch fails', async () => {
   const localThis = {
     current: true,

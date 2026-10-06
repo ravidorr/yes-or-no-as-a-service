@@ -1,20 +1,26 @@
 import { appendFileSync } from 'node:fs';
-import { resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
+import { isExecutedModule } from '../src/run-if-main.js';
 import {
   extractChangelogSection,
   readChangelogAtRef,
   readPackageVersionAtRef
 } from './release-notes.mjs';
 
-export function detectVersionBump(beforeRef) {
+export function detectVersionBump(
+  beforeRef,
+  {
+    readPackageVersionAtRefImpl = readPackageVersionAtRef,
+    readChangelogAtRefImpl = readChangelogAtRef,
+    extractChangelogSectionImpl = extractChangelogSection
+  } = {}
+) {
   if (!beforeRef || /^0+$/.test(beforeRef)) {
     return { bumped: false, reason: 'no-before-sha' };
   }
 
   try {
-    const beforeVersion = readPackageVersionAtRef(beforeRef);
-    const headVersion = readPackageVersionAtRef('HEAD');
+    const beforeVersion = readPackageVersionAtRefImpl(beforeRef);
+    const headVersion = readPackageVersionAtRefImpl('HEAD');
 
     if (beforeVersion === headVersion) {
       return {
@@ -24,8 +30,8 @@ export function detectVersionBump(beforeRef) {
       };
     }
 
-    const changelog = readChangelogAtRef('HEAD');
-    const notes = extractChangelogSection(changelog, headVersion);
+    const changelog = readChangelogAtRefImpl('HEAD');
+    const notes = extractChangelogSectionImpl(changelog, headVersion);
 
     return {
       bumped: true,
@@ -39,6 +45,29 @@ export function detectVersionBump(beforeRef) {
       reason: error.message
     };
   }
+}
+
+export function runDetectVersionBumpCli({
+  argv = process.argv,
+  env = process.env,
+  detectVersionBumpImpl = detectVersionBump,
+  writeVersionBumpOutputsImpl = writeVersionBumpOutputs,
+  stdout = process.stdout,
+  exit = process.exit
+} = {}) {
+  const beforeRef = env.GITHUB_EVENT_BEFORE ?? argv[2];
+  const result = detectVersionBumpImpl(beforeRef);
+
+  writeVersionBumpOutputsImpl(result);
+
+  if (!result.bumped) {
+    stdout.write(`No release required (${result.reason ?? 'skipped'}).\n`);
+    exit(0);
+    return result;
+  }
+
+  stdout.write(`Release required for ${result.tag}.\n`);
+  return result;
 }
 
 export function writeVersionBumpOutputs(result, outputPath = process.env.GITHUB_OUTPUT) {
@@ -61,16 +90,13 @@ export function writeVersionBumpOutputs(result, outputPath = process.env.GITHUB_
   }
 }
 
-if (import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
-  const beforeRef = process.env.GITHUB_EVENT_BEFORE ?? process.argv[2];
-  const result = detectVersionBump(beforeRef);
-
-  writeVersionBumpOutputs(result);
-
-  if (!result.bumped) {
-    console.log(`No release required (${result.reason ?? 'skipped'}).`);
-    process.exit(0);
+export function runDetectVersionBumpCliIfMain({
+  isExecutedModuleImpl = isExecutedModule,
+  ...options
+} = {}) {
+  if (isExecutedModuleImpl(import.meta.url)) {
+    runDetectVersionBumpCli(options);
   }
-
-  console.log(`Release required for ${result.tag}.`);
 }
+
+runDetectVersionBumpCliIfMain();
