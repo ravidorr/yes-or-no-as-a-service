@@ -331,6 +331,22 @@ test('serves the yes UI at /yes', async () => {
   assert.doesNotMatch(body, /type="radio"/);
 });
 
+test('loads the Pendo agent on each UI route', async () => {
+  for (const route of ['/yes', '/no', '/random']) {
+    const response = await fetch(`${baseUrl}${route}`);
+    const body = await response.text();
+
+    assert.equal(response.status, 200);
+    assert.match(
+      body,
+      /https:\/\/cdn\.pendo\.io\/agent\/static\/' \+ apiKey \+ '\/pendo\.js/
+    );
+    assert.match(body, /\}\)\('cd612b6e-f576-4f2f-9d59-d35cf9ffe16f'\);/);
+    assert.match(body, /pendo\.initialize\(\{/);
+    assert.match(body, /id: 'VISITOR-UNIQUE-ID'/);
+  }
+});
+
 test('does not serve the unconfigured page template as a static asset', async () => {
   const response = await fetch(`${baseUrl}/index.html`);
 
