@@ -39,6 +39,15 @@ cd yes-or-no-as-a-service
 npm install
 ```
 
+## Hosted demo
+
+The official demo is available on Render:
+
+- [Ask Yes](https://yes-or-no-as-a-service.onrender.com/yes)
+- [Ask No](https://yes-or-no-as-a-service.onrender.com/no)
+- [Ask Random](https://yes-or-no-as-a-service.onrender.com/random)
+- [Health check](https://yes-or-no-as-a-service.onrender.com/health)
+
 ## Run
 
 ```sh
