@@ -78,5 +78,5 @@ test('applyPageCopy fills mode-specific labels and replay links', () => {
 });
 
 test('getPageConfig rejects unknown modes', () => {
-  assert.throws(() => getPageConfig('maybe'), /Unknown page mode: maybe/);
+  assert.throws(() => getPageConfig('unknown'), /Unknown page mode: unknown/);
 });

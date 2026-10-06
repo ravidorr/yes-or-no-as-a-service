@@ -65,11 +65,6 @@ export function extractChangelogSection(changelog, version) {
   const lines = changelog.split('\n');
   const headingPrefix = `## ${version} - `;
   const startIndex = lines.findIndex((line) => line.startsWith(headingPrefix));
-
-  if (startIndex === -1) {
-    throw new Error(`CHANGELOG.md has no release entry for version ${version}.`);
-  }
-
   const sectionLines = [];
   const versionHeadingPattern = /^## \d+\.\d+\.\d+ - /;
 
@@ -112,16 +107,25 @@ export function validateReleaseNotes({
   return errors;
 }
 
-export function verifyReleaseNotesAgainstBase(baseRef) {
-  if (!shouldValidateReleaseNotes(readChangedFilesSince(baseRef))) {
+export function verifyReleaseNotesAgainstBase(
+  baseRef,
+  {
+    readChangedFilesSinceImpl = readChangedFilesSince,
+    readPackageVersionAtRefImpl = readPackageVersionAtRef,
+    readChangelogAtRefImpl = readChangelogAtRef,
+    shouldValidateReleaseNotesImpl = shouldValidateReleaseNotes,
+    validateReleaseNotesImpl = validateReleaseNotes
+  } = {}
+) {
+  if (!shouldValidateReleaseNotesImpl(readChangedFilesSinceImpl(baseRef))) {
     return [];
   }
 
-  const headVersion = readPackageVersionAtRef('HEAD');
-  const baseVersion = readPackageVersionAtRef(baseRef);
-  const changelog = readChangelogAtRef('HEAD');
+  const headVersion = readPackageVersionAtRefImpl('HEAD');
+  const baseVersion = readPackageVersionAtRefImpl(baseRef);
+  const changelog = readChangelogAtRefImpl('HEAD');
 
-  return validateReleaseNotes({
+  return validateReleaseNotesImpl({
     headVersion,
     baseVersion,
     changelog

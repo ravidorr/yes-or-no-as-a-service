@@ -53,6 +53,36 @@ test('initializes the theme toggle from the effective color scheme', () => {
   assert.equal(localThis.button.attributes['aria-label'], 'Switch to light theme');
 });
 
+test('initializes the theme toggle from stored light and dark themes', () => {
+  const darkFixture = createThemeFixture({ storedTheme: 'dark', prefersDark: false });
+  initializeThemeToggle(darkFixture.dependencies);
+  assert.equal(darkFixture.button.attributes['aria-label'], 'Switch to light theme');
+
+  const lightFixture = createThemeFixture({ storedTheme: 'light', prefersDark: true });
+  initializeThemeToggle(lightFixture.dependencies);
+  assert.equal(lightFixture.button.attributes['aria-label'], 'Switch to dark theme');
+});
+
+test('falls back to the system theme when stored theme values are invalid', () => {
+  const localThis = createThemeFixture({ prefersDark: false });
+  localThis.document.documentElement.dataset.theme = 'system';
+
+  initializeThemeToggle(localThis.dependencies);
+
+  assert.equal(localThis.button.attributes['aria-label'], 'Switch to dark theme');
+});
+
+test('ignores storage failures when persisting the selected theme', () => {
+  const localThis = createThemeFixture({ storedTheme: 'light', prefersDark: false });
+  localThis.storage.setItem = () => {
+    throw new Error('blocked');
+  };
+
+  initializeThemeToggle(localThis.dependencies);
+  assert.doesNotThrow(() => localThis.button.listeners.click());
+  assert.equal(localThis.document.documentElement.dataset.theme, 'dark');
+});
+
 test('toggles and persists the selected theme', () => {
   const localThis = createThemeFixture({ storedTheme: 'light', prefersDark: false });
 
@@ -62,4 +92,15 @@ test('toggles and persists the selected theme', () => {
   assert.equal(localThis.document.documentElement.dataset.theme, 'dark');
   assert.equal(localThis.storage.values.theme, 'dark');
   assert.equal(localThis.button.attributes['aria-label'], 'Switch to light theme');
+});
+
+test('toggles from dark back to light', () => {
+  const localThis = createThemeFixture({ storedTheme: 'dark', prefersDark: false });
+
+  initializeThemeToggle(localThis.dependencies);
+  localThis.button.listeners.click();
+
+  assert.equal(localThis.document.documentElement.dataset.theme, 'light');
+  assert.equal(localThis.storage.values.theme, 'light');
+  assert.equal(localThis.button.attributes['aria-label'], 'Switch to dark theme');
 });
