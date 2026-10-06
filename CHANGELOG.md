@@ -2,8 +2,8 @@
 
 ## 2.2.0 - 2026-10-06
 
-- Load the Novus by Pendo web SDK on the answer pages and the 404 page, and
-  initialize it once per page load with an anonymous visitor.
+- Support opt-in Novus by Pendo analytics for configured deployments, excluding
+  shared question text from captured URLs.
 
 ## 2.1.5 - 2026-10-06
 

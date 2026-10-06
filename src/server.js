@@ -19,24 +19,77 @@ import { parseTrustProxyConfig } from './trust-proxy-config.js';
 import { isExecutedModule } from './run-if-main.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const PENDO_PUBLIC_APP_ID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 let gracefulShutdownController;
+
+export function createPendoSnippet(publicAppId) {
+  if (typeof publicAppId !== 'string' || !PENDO_PUBLIC_APP_ID_PATTERN.test(publicAppId)) {
+    return '';
+  }
+
+  return `<script>
+      (function (apiKey) {
+        (function (p, e, n, d, o) {
+          var v, w, x, y, z;
+          o = p[d] = p[d] || {};
+          o._q = o._q || [];
+          v = ['initialize', 'identify', 'updateOptions', 'pageLoad', 'track'];
+
+          for (w = 0, x = v.length; w < x; ++w) {
+            (function (m) {
+              o[m] = o[m] || function () {
+                o._q[m === v[0] ? 'unshift' : 'push'](
+                  [m].concat([].slice.call(arguments, 0))
+                );
+              };
+            })(v[w]);
+          }
+
+          y = e.createElement(n);
+          y.async = true;
+          y.src = 'https://cdn.pendo.io/agent/static/' + apiKey + '/pendo.js';
+          z = e.getElementsByTagName(n)[0];
+          z.parentNode.insertBefore(y, z);
+        })(window, document, 'script', 'pendo');
+      })('${publicAppId}');
+
+      pendo.initialize({
+        visitor: {
+          id: ''
+        },
+        location: {
+          transforms: [{
+            attr: 'search',
+            action: 'ExcludeKeys',
+            data: ['request']
+          }]
+        }
+      });
+    </script>`;
+}
 
 export function createApp({
   rateLimitConfig,
   isShuttingDown = () => false,
   metrics = createMetrics(),
   trustProxy = parseTrustProxyConfig(),
-  randomNumberSource = DEFAULT_RANDOM_NUMBER_SOURCE
+  randomNumberSource = DEFAULT_RANDOM_NUMBER_SOURCE,
+  pendoPublicAppId = process.env.PENDO_PUBLIC_APP_ID
 } = {}) {
   const app = express();
   const publicPath = resolve(__dirname, '../public');
   const pageTemplate = readFileSync(resolve(publicPath, 'index.html'), 'utf8');
   const notFoundTemplate = readFileSync(resolve(publicPath, '404.html'), 'utf8');
   const staticAssets = express.static(publicPath, { index: false });
+  const pendoSnippet = createPendoSnippet(pendoPublicAppId);
 
   function renderPage(mode, res) {
-    res.status(200).type('html').send(pageTemplate.replaceAll('__PAGE_MODE__', mode));
+    res
+      .status(200)
+      .type('html')
+      .send(pageTemplate.replaceAll('__PAGE_MODE__', mode).replace('__PENDO_SNIPPET__', pendoSnippet));
   }
   const resolvedRateLimitConfig = rateLimitConfig
     ? validateRateLimitConfig(rateLimitConfig)
@@ -144,7 +197,7 @@ export function createApp({
   });
 
   app.use((req, res) => {
-    res.status(404).type('html').send(notFoundTemplate);
+    res.status(404).type('html').send(notFoundTemplate.replace('__PENDO_SNIPPET__', pendoSnippet));
   });
 
   return app;

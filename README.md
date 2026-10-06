@@ -149,6 +149,20 @@ SHUTDOWN_TIMEOUT_MS=30000 SHUTDOWN_READINESS_GRACE_MS=1000 npm start
 
 `PORT` must be an integer between `0` and `65535`.
 
+### Optional Pendo analytics
+
+Pendo analytics are disabled by default. To enable anonymous page and
+interaction tracking for an official deployment, set the Pendo public app ID:
+
+```sh
+PENDO_PUBLIC_APP_ID=<your-pendo-public-app-id> npm start
+```
+
+Do not set this variable for local development, CI, or self-hosted deployments
+unless you want their activity sent to that Pendo application. The integration
+excludes shared-link `request` query text from captured URLs. See
+[the privacy policy](PRIVACY.md) for details.
+
 ## Docker
 
 Build the image locally:
