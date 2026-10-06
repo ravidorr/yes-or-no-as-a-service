@@ -66,6 +66,7 @@ function createFakeTimers() {
 function createShutdownHarness({
   timeoutMs = 30_000,
   readinessGraceMs = 0,
+  forceExitGraceMs = 2_000,
   server: providedServer,
   processRef: providedProcessRef,
   timers: providedTimers
@@ -81,6 +82,7 @@ function createShutdownHarness({
     server,
     timeoutMs,
     readinessGraceMs,
+    forceExitGraceMs,
     processRef,
     setTimeoutFn: timers.setTimeoutFn,
     clearTimeoutFn: timers.clearTimeoutFn,
@@ -184,7 +186,10 @@ test('deadline expiration force-closes remaining connections', () => {
 });
 
 test('deadline expiration exits after the server close callback runs', () => {
-  const { shutdown, calls, timers, exits } = createShutdownHarness({ timeoutMs: 1000 });
+  const { shutdown, calls, timers, exits } = createShutdownHarness({
+    timeoutMs: 1000,
+    forceExitGraceMs: 500
+  });
 
   shutdown.shutdown('SIGTERM');
 
@@ -194,6 +199,27 @@ test('deadline expiration exits after the server close callback runs', () => {
   calls.close[0]();
 
   assert.deepEqual(exits, [0]);
+});
+
+test('deadline expiration exits when the server close callback never runs', () => {
+  const { shutdown, calls, timers, exits } = createShutdownHarness({
+    timeoutMs: 1000,
+    forceExitGraceMs: 500
+  });
+
+  shutdown.shutdown('SIGTERM');
+
+  const deadlineTimerId = [...timers.timers.keys()][0];
+
+  timers.runTimer(deadlineTimerId);
+
+  assert.equal(calls.closeAllConnections, 1);
+
+  const forceExitTimerId = [...timers.timers.keys()][0];
+
+  timers.runTimer(forceExitTimerId);
+
+  assert.deepEqual(exits, [1]);
 });
 
 test('duplicate signals exit immediately with a non-zero status', () => {

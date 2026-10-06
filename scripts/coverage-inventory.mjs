@@ -27,6 +27,7 @@ export function listSourceFiles(directories = PRODUCTION_DIRECTORIES) {
   return directories.flatMap((directory) => listJsFilesInDirectory(directory));
 }
 
+// Matches Node's --experimental-test-coverage report marker prefix.
 const COVERAGE_REPORT_PREFIX = '[#ℹ]';
 
 export function extractCoverageReport(output) {

@@ -1,5 +1,5 @@
-import { execSync } from 'node:child_process';
 import { isExecutedModule } from '../src/run-if-main.js';
+import { assertValidGitRef, execGit } from './git-exec.mjs';
 import { verifyReleaseNotesAgainstBase } from './release-notes.mjs';
 
 export function resolveBaseRef(argv = process.argv) {
@@ -12,7 +12,7 @@ export function resolveBaseRef(argv = process.argv) {
 
 export function runVerifyReleaseNotes({
   argv = process.argv,
-  execSyncImpl = execSync,
+  execGitImpl = execGit,
   verifyReleaseNotesAgainstBaseImpl = verifyReleaseNotesAgainstBase,
   stderr = process.stderr,
   stdout = process.stdout,
@@ -27,7 +27,8 @@ export function runVerifyReleaseNotes({
   }
 
   try {
-    execSyncImpl(`git rev-parse --verify ${baseRef}`, { stdio: 'ignore' });
+    assertValidGitRef(baseRef);
+    execGitImpl(['rev-parse', '--verify', baseRef], { stdio: 'ignore' });
   } catch {
     stderr.write(`Base ref not found: ${baseRef}\n`);
     stderr.write('Fetch the base branch first, for example: git fetch origin main\n');

@@ -133,21 +133,17 @@ test('detectVersionBump skips when the version is unchanged', () => {
   assert.equal(result.version, readHeadVersion());
 });
 
-test('detectVersionBump detects a version increase against main', () => {
-  const mainVersion = execSync('git show origin/main:package.json', {
-    encoding: 'utf8'
+test('detectVersionBump reports bump metadata when head exceeds base', () => {
+  const result = detectVersionBump('origin/main', {
+    readPackageVersionAtRefImpl: (ref) => (ref === 'HEAD' ? '2.0.0' : '1.0.0'),
+    readChangelogAtRefImpl: () => '# Changelog\n\n## 2.0.0 - 2026-10-06\n\n- Ship it.\n',
+    extractChangelogSectionImpl: () => '- Ship it.'
   });
 
-  const result = detectVersionBump('origin/main');
-
-  if (JSON.parse(mainVersion).version === readHeadVersion()) {
-    assert.equal(result.bumped, false);
-    return;
-  }
-
   assert.equal(result.bumped, true);
-  assert.match(result.tag, /^v\d+\.\d+\.\d+$/);
-  assert.match(result.notes, /^-/m);
+  assert.equal(result.version, '2.0.0');
+  assert.equal(result.tag, 'v2.0.0');
+  assert.equal(result.notes, '- Ship it.');
 });
 
 function readHeadVersion() {

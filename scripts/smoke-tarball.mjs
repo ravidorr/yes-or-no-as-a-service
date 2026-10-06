@@ -55,13 +55,13 @@ export async function runSmokeTarball({
   const prefixDir = joinImpl(tempDir, 'prefix');
 
   try {
-    const packOutput = await run('npm', ['pack', '--json'], { cwd });
+    const packOutput = await run('npm', ['pack', '--json', '--pack-destination', tempDir], { cwd });
     const packEntries = JSON.parse(packOutput.stdout);
     const tarballName = packEntries[0]?.filename;
 
     assertImpl.ok(tarballName, 'npm pack did not return a tarball filename');
 
-    await run('npm', ['install', '-g', joinImpl(cwd, tarballName), '--prefix', prefixDir]);
+    await run('npm', ['install', '-g', joinImpl(tempDir, tarballName), '--prefix', prefixDir]);
 
     const yesOutput = await run(joinImpl(prefixDir, 'bin', 'yesornoaas'), ['yes']);
     assertImpl.equal(yesOutput.stdout.trim(), 'Yes!');

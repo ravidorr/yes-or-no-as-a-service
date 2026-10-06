@@ -169,6 +169,37 @@ test('share URL selects all text on focus', async ({ page }) => {
   await expect(page.locator('#share-url')).toHaveJSProperty('selectionEnd', value.length);
 });
 
+for (const [label, status] of [
+  ['503', 503],
+  ['429', 429]
+]) {
+  test(`API ${label} shows the unavailable error slot`, async ({ page }) => {
+    await page.route('**/api/yes', (route) =>
+      route.fulfill({ status, contentType: 'text/plain', body: '' })
+    );
+
+    await page.goto('/yes');
+    await page.locator('#request').fill('Can I?');
+    await page.locator('#submit').click();
+
+    await expect(page.locator('#error')).toBeVisible();
+    await expect(page.getByText('YESorNOaaS is unavailable.')).toBeVisible();
+    await expect(page.locator('#request')).toHaveValue('Can I?');
+  });
+}
+
+test('network abort shows the unavailable error slot', async ({ page }) => {
+  await page.route('**/api/yes', (route) => route.abort('failed'));
+
+  await page.goto('/yes');
+  await page.locator('#request').fill('Can I?');
+  await page.locator('#submit').click();
+
+  await expect(page.locator('#error')).toBeVisible();
+  await expect(page.getByText('YESorNOaaS is unavailable.')).toBeVisible();
+  await expect(page.locator('#request')).toHaveValue('Can I?');
+});
+
 test('timeout shows the error slot with specified copy', async ({ page }) => {
   test.setTimeout(REQUEST_TIMEOUT_MS + 10_000);
 

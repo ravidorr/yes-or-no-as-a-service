@@ -8,6 +8,7 @@ export function createRateLimitMiddleware(config) {
     standardHeaders: true,
     legacyHeaders: false,
     handler: (_req, res) => {
+      // Reuse the unknown-route hint as the throttle body by design.
       res.status(429).type('text/plain').send(UNKNOWN_ROUTE_HINT);
     }
   });

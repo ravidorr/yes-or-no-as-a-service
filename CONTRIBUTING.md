@@ -110,14 +110,16 @@ release and container image.
 To smoke-test the publish tarball locally before a release:
 
 ```sh
-npm pack
-npm install -g ./ravidor-yesornoaas-*.tgz
+pack_dir="$(mktemp -d)"
+npm pack --pack-destination "$pack_dir"
+npm install -g "$pack_dir"/ravidor-yesornoaas-*.tgz
 yesornoaas yes
 yesornoaas no
-rm ravidor-yesornoaas-*.tgz
+rm -rf "$pack_dir"
 ```
 
-Pack tarballs are gitignored (`*.tgz`); do not commit them.
+This creates the tarball outside the repository and removes it after the smoke
+test.
 
 ## Git hooks
 

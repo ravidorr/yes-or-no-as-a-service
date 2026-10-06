@@ -2,6 +2,7 @@ import { parsePositiveInteger } from './rate-limit-config.js';
 
 export const DEFAULT_SHUTDOWN_TIMEOUT_MS = 30_000;
 export const DEFAULT_READINESS_GRACE_MS = 1_000;
+export const DEFAULT_FORCE_EXIT_GRACE_MS = 2_000;
 export const MAX_SHUTDOWN_TIMEOUT_MS = 2_147_483_647;
 
 function parseNonNegativeInteger(value, name) {

@@ -1,13 +1,42 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
+  execNpm,
   generatePackageLockFromManifest,
   listStagedFiles,
+  resolveNpmExecutable,
   runSyncPackageLockCliIfMain,
   readStagedFileContent,
   shouldSyncPackageLock,
   syncPackageLock
 } from '../scripts/sync-package-lock.mjs';
+
+test('resolveNpmExecutable selects npm.cmd on Windows', () => {
+  assert.equal(resolveNpmExecutable('win32'), 'npm.cmd');
+  assert.equal(resolveNpmExecutable('linux'), 'npm');
+});
+
+test('execNpm enables shell execution on Windows', () => {
+  const localThis = {
+    command: null,
+    args: null,
+    options: null
+  };
+
+  execNpm(['install'], { cwd: '/tmp' }, {
+    execFileSyncImpl: (command, args, options) => {
+      localThis.command = command;
+      localThis.args = args;
+      localThis.options = options;
+      return '';
+    },
+    platform: 'win32'
+  });
+
+  assert.equal(localThis.command, 'npm.cmd');
+  assert.deepEqual(localThis.args, ['install']);
+  assert.equal(localThis.options.shell, true);
+});
 
 test('shouldSyncPackageLock runs when package.json is staged', () => {
   assert.equal(shouldSyncPackageLock(['README.md', 'package.json']), true);
@@ -45,8 +74,8 @@ test('syncPackageLock writes and stages the regenerated lockfile', () => {
       localThis.writtenContents = contents;
     },
     resolveImpl: (path) => `/repo/${path}`,
-    execSyncImpl: (command) => {
-      if (command === 'git add package-lock.json') {
+    execGitImpl: (args) => {
+      if (args[0] === 'add' && args[1] === 'package-lock.json') {
         localThis.staged = true;
       }
     }
@@ -70,7 +99,7 @@ test('runSyncPackageLockCliIfMain delegates to the sync runner', () => {
       localThis.called = true;
     },
     resolveImpl: (path) => path,
-    execSyncImpl: () => {}
+    execGitImpl: () => {}
   });
 
   assert.equal(localThis.called, true);

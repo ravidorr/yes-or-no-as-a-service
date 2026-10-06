@@ -48,6 +48,7 @@ export function createMetrics() {
   });
 
   function middleware(req, res, next) {
+    // Do not instrument /metrics scrapes; they would recurse into request metrics.
     if (req.path === '/metrics' && req.method === 'GET') {
       next();
       return;
@@ -74,6 +75,8 @@ export function createMetrics() {
       requestsTotal.inc({ route, method, status_code: statusCode });
     }
 
+    // Listen on finish, close, and req.close so aborted clients decrement in-flight
+    // exactly once and record status 499 when no response was fully sent.
     res.on('finish', finalize);
     res.on('close', () => {
       if (!res.writableFinished) {

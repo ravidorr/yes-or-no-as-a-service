@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { assertValidGitRef, execGit } from './git-exec.mjs';
 
 const VERSION_PATTERN = /^(\d+)\.(\d+)\.(\d+)$/;
 
@@ -25,26 +25,29 @@ export function compareVersions(left, right) {
   return 0;
 }
 
-export function readPackageVersionAtRef(ref = 'HEAD') {
-  const contents = execSync(`git show ${ref}:package.json`, { encoding: 'utf8' });
+export function readPackageVersionAtRef(ref = 'HEAD', { execGitImpl = execGit } = {}) {
+  assertValidGitRef(ref);
+  const contents = execGitImpl(['show', `${ref}:package.json`]);
 
   return JSON.parse(contents).version;
 }
 
-export function readChangelogAtRef(ref = 'HEAD') {
-  return execSync(`git show ${ref}:CHANGELOG.md`, { encoding: 'utf8' });
+export function readChangelogAtRef(ref = 'HEAD', { execGitImpl = execGit } = {}) {
+  assertValidGitRef(ref);
+  return execGitImpl(['show', `${ref}:CHANGELOG.md`]);
 }
 
-export function readChangedFilesSince(baseRef, cwd) {
-  const output = execSync(`git diff --no-renames --name-only ${baseRef}...HEAD`, {
-    cwd,
-    encoding: 'utf8'
+export function readChangedFilesSince(baseRef, cwd, { execGitImpl = execGit } = {}) {
+  assertValidGitRef(baseRef);
+  const output = execGitImpl(['diff', '--no-renames', '--name-only', `${baseRef}...HEAD`], {
+    cwd
   });
 
   return output.split('\n').filter(Boolean);
 }
 
 export function shouldValidateReleaseNotes(changedFiles) {
+  // Skip release-note checks when only GitHub workflow files changed.
   return changedFiles.some(
     (file) => !file.startsWith('.github/workflows/')
   );

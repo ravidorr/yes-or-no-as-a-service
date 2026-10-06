@@ -2,6 +2,25 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { checkDockerHealth, runDockerHealthcheckCliIfMain } from '../scripts/docker-healthcheck.mjs';
 
+test('checkDockerHealth exits when the health endpoint cannot be reached', async () => {
+  const localThis = {
+    exitCode: null
+  };
+
+  const result = await checkDockerHealth({
+    fetchImpl: async () => {
+      throw new Error('connection refused');
+    },
+    exit(code) {
+      localThis.exitCode = code;
+    }
+  });
+
+  assert.equal(localThis.exitCode, 1);
+  assert.equal(result.healthy, false);
+  assert.equal(result.reason, 'network');
+});
+
 test('checkDockerHealth exits when the health endpoint is unavailable', async () => {
   const localThis = {
     exitCode: null

@@ -68,8 +68,14 @@ test('runSmokeTarball validates the packed CLI and MCP binaries', async () => {
   });
 
   assert.equal(result.tarballName, 'yesornoaas-1.0.0.tgz');
-  assert.match(localThis.commands.join('\n'), /pack/);
-  assert.match(localThis.commands.join('\n'), /yesornoaas-1.0.0.tgz/);
+  assert.match(
+    localThis.commands.join('\n'),
+    /pack --json --pack-destination \/tmp\/yesornoaas-pack-test/
+  );
+  assert.match(
+    localThis.commands.join('\n'),
+    /install -g \/tmp\/yesornoaas-pack-test\/yesornoaas-1.0.0.tgz/
+  );
   assert.equal(localThis.connected, true);
   assert.equal(localThis.listedTools, true);
   assert.equal(localThis.closed, true);

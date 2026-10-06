@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.5 - 2026-10-06
+
+- Harden release scripts against shell injection, improve shutdown and healthcheck reliability, add security headers, validate theme bootstrap storage, and expand behavioral test coverage from the code review.
+
 ## 2.1.4 - 2026-10-06
 
 - Enforce 100% unit test coverage for all production JavaScript in `src/`, `public/`, and `scripts/`.

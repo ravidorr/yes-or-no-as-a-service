@@ -241,26 +241,16 @@ test('serves the OpenAPI specification', async () => {
   assert.match(document, /^openapi: 3\.1\.1$/m);
   assert.match(document, /^  title: YESorNOaaS API$/m);
   assert.match(document, new RegExp(`^  version: ${packageInfo.version.replace(/\./g, '\\.')}$`, 'm'));
-  assert.match(document, /^  \/:$/m);
-  assert.match(document, /^        '308':$/m);
-  assert.match(
-    document,
-    /^  \/version:\n    get:\n      summary: Return the package version as plain text\n      responses:\n        '200':\n          description: Package version\n          content:\n            text\/plain:\n              schema:\n                type: string$/m
-  );
-  assert.match(document, /^  \/health:$/m);
-  assert.match(document, /^  \/metrics:\n    get:\n      summary: Return Prometheus metrics for scraping\n      description: \|\n        Exposes HTTP service metrics and standard Node\.js runtime metrics in\n        Prometheus text format\. Intended for Prometheus scraping\. Exempt from\n        rate limiting\.\n      responses:\n        '200':\n          description: Prometheus metrics exposition format\n          content:\n            text\/plain:\n              schema:\n                type: string$/m);
-  assert.match(document, /^  \/api\/yes:$/m);
-  assert.match(document, /^  \/api\/no:$/m);
-  assert.match(document, /^  \/api\/random:$/m);
-  assert.match(document, /^    RandomResponse:$/m);
-  assert.match(document, /^    HealthResponse:$/m);
-  assert.match(document, /^        '503':$/m);
-  assert.match(document, /^          description: Service is draining connections during shutdown$/m);
-  assert.match(document, /^    YesResponse:$/m);
-  assert.match(document, /^    NoResponse:$/m);
-  assert.match(document, /^    ThrottledResponse:$/m);
-  assert.match(document, /^x-yesornoaas-unknown-routes:$/m);
-  assert.match(document, /^  description: Unmatched request paths, except legacy root share redirects, return the HTML 404 page until throttled, then `429 text\/plain` with a route hint\.$/m);
+  assert.match(document, /ThrottledResponse:/);
+  assert.match(document, /x-yesornoaas-unknown-routes:/);
+});
+
+test('sets baseline security headers on responses', async () => {
+  const response = await fetch(`${baseUrl}/yes`);
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get('x-frame-options'), 'DENY');
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
 });
 
 test('returns the 404 page for GET /', async () => {

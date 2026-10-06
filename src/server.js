@@ -46,8 +46,15 @@ export function createApp({
     app.set('trust proxy', trustProxy);
   }
 
+  app.use((_req, res, next) => {
+    res.setHeader('X-Frame-Options', 'DENY');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    next();
+  });
+
   app.use(metrics.middleware);
   app.use((req, res, next) => {
+    // Do not serve the unconfigured template; only /yes, /no, and /random render it.
     if (req.path === '/index.html') {
       next();
       return;
@@ -117,6 +124,7 @@ export function createApp({
     renderPage('random', res);
   });
 
+  // Rate limiting applies only to routes registered below (API routes and the 404 handler).
   app.use(createRateLimitMiddleware(resolvedRateLimitConfig));
 
   app.all('/api/yes', (req, res) => {

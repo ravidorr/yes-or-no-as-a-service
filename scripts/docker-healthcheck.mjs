@@ -5,21 +5,26 @@ export async function checkDockerHealth({
   port = process.env.PORT ?? '3000',
   exit = process.exit
 } = {}) {
-  const response = await fetchImpl(`http://127.0.0.1:${port}/health`);
+  try {
+    const response = await fetchImpl(`http://127.0.0.1:${port}/health`);
 
-  if (response.status !== 200) {
+    if (response.status !== 200) {
+      exit(1);
+      return { healthy: false, reason: 'status' };
+    }
+
+    const body = await response.json();
+
+    if (body.status !== 'YESorNOaaS' || typeof body.version !== 'string') {
+      exit(1);
+      return { healthy: false, reason: 'body' };
+    }
+
+    return { healthy: true, body };
+  } catch {
     exit(1);
-    return { healthy: false, reason: 'status' };
+    return { healthy: false, reason: 'network' };
   }
-
-  const body = await response.json();
-
-  if (body.status !== 'YESorNOaaS' || typeof body.version !== 'string') {
-    exit(1);
-    return { healthy: false, reason: 'body' };
-  }
-
-  return { healthy: true, body };
 }
 
 export async function runDockerHealthcheckCli(options = {}) {
