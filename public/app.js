@@ -1,8 +1,11 @@
 import {
   autoplayRequest,
   copyShareLink,
+  MAX_AUTOPLAY_ANIMATION_LENGTH,
   readRequestParam,
-  submitAnswerRequest
+  resolveEntryPoint,
+  submitAnswerRequest,
+  trackEvent
 } from './app-behavior.js';
 import { applyPageCopy } from './page-config.js';
 import { buildShareUrl, buildSocialShareLinks } from './share-utils.js';
@@ -25,6 +28,7 @@ export function initializeApp({
   window = globalThis.window,
   fetch: fetchImpl = globalThis.fetch.bind(globalThis),
   navigator = globalThis.navigator,
+  performance = globalThis.performance,
   applyPageCopyImpl = applyPageCopy,
   initializeThemeToggleImpl = initializeThemeToggle,
   readRequestParamImpl = readRequestParam,
@@ -32,7 +36,9 @@ export function initializeApp({
   autoplayRequestImpl = autoplayRequest,
   copyShareLinkImpl = copyShareLink,
   buildShareUrlImpl = buildShareUrl,
-  buildSocialShareLinksImpl = buildSocialShareLinks
+  buildSocialShareLinksImpl = buildSocialShareLinks,
+  resolveEntryPointImpl = resolveEntryPoint,
+  trackEventImpl = trackEvent
 } = {}) {
   applyPageCopyImpl(document.body.dataset.mode, document);
 
@@ -62,6 +68,8 @@ export function initializeApp({
   let currentController = null;
   let isLoading = false;
   let requestToken = 0;
+  let nextSubmissionSource = 'manual';
+  let answerSource = null;
 
   function hasText() {
     return input.value.trim().length > 0;
@@ -198,6 +206,20 @@ export function initializeApp({
     syncShareLink();
   }
 
+  // Event properties must never include question text, share URLs, or referrers.
+  function track(eventName, properties) {
+    trackEventImpl(window.pendo, eventName, properties);
+  }
+
+  function trackRequestFailed(errorKind, httpStatus, source) {
+    track('answer_request_failed', {
+      error_kind: errorKind,
+      http_status: httpStatus,
+      mode: answer,
+      source
+    });
+  }
+
   function wait(ms) {
     return new Promise((resolve) => {
       window.setTimeout(resolve, ms);
@@ -233,11 +255,23 @@ export function initializeApp({
     await copyShareLinkImpl({
       text: shareUrl.value,
       writeText: (text) => navigator.clipboard.writeText(text),
-      onSuccess: () => showShareStatus('Link copied.'),
-      onError: () => {
+      onSuccess: () => {
+        showShareStatus('Link copied.');
+        track('share_link_copied', {
+          mode: answer,
+          answer_result: answerElement.dataset.answer,
+          source: answerSource
+        });
+      },
+      onError: (error) => {
         shareUrl.focus();
         shareUrl.select();
         showShareError('Copy failed. Select the link manually.');
+        track('share_link_copy_failed', {
+          mode: answer,
+          clipboard_api_available: Boolean(navigator.clipboard),
+          error_name: error instanceof Error ? error.name : 'unknown'
+        });
       }
     });
   });
@@ -272,12 +306,14 @@ export function initializeApp({
     }
 
     const submittedText = input.value;
+    const source = nextSubmissionSource;
     currentController?.abort();
     const token = requestToken + 1;
     requestToken = token;
     hideResult();
     isLoading = true;
     setLoading(true);
+    const startedAt = performance.now();
 
     await submitAnswerRequestImpl({
       answer,
@@ -288,9 +324,39 @@ export function initializeApp({
       onStart: (controller) => {
         currentController = controller;
       },
-      onSuccess: showResult,
-      onTimeout: () => showError('timeout'),
-      onUnavailable: () => showError('unavailable')
+      onSuccess: (text) => {
+        const responseTimeMs = Math.round(performance.now() - startedAt);
+
+        showResult(text);
+        answerSource = source;
+
+        // Typed questions and shared-link replays are separate events, so they
+        // never double count.
+        if (source === 'shared_link') {
+          track('shared_link_replay_completed', {
+            mode: answer,
+            answer_result: answerElement.dataset.answer,
+            request_length: requestParam.length,
+            animated: requestParam.length <= MAX_AUTOPLAY_ANIMATION_LENGTH,
+            entry_point: resolveEntryPointImpl(document.referrer, window.location.origin)
+          });
+        } else {
+          track('question_answered', {
+            mode: answer,
+            answer_result: answerElement.dataset.answer,
+            request_length: submittedText.length,
+            response_time_ms: responseTimeMs
+          });
+        }
+      },
+      onTimeout: () => {
+        showError('timeout');
+        trackRequestFailed('timeout', null, source);
+      },
+      onUnavailable: (httpStatus) => {
+        showError('unavailable');
+        trackRequestFailed('unavailable', httpStatus, source);
+      }
     });
 
     if (token === requestToken) {
@@ -320,7 +386,15 @@ export function initializeApp({
         input.dispatchEvent(new Event('input', { bubbles: true }));
       },
       submitForm: () => {
-        form.requestSubmit();
+        // requestSubmit() fires the submit event synchronously, so the handler
+        // reads this source before it is reset.
+        nextSubmissionSource = 'shared_link';
+
+        try {
+          form.requestSubmit();
+        } finally {
+          nextSubmissionSource = 'manual';
+        }
       },
       wait
     });

@@ -5,7 +5,9 @@ import {
   copyShareLink,
   readRequestParam,
   REQUEST_TIMEOUT_MS,
+  resolveEntryPoint,
   submitAnswerRequest,
+  trackEvent,
   TYPE_DELAY_MS
 } from '../public/app-behavior.js';
 
@@ -143,7 +145,8 @@ test('submitAnswerRequest shows the no response on success', async () => {
 test('submitAnswerRequest shows unavailable when the API returns a non-OK response', async () => {
   const localThis = {
     current: true,
-    unavailable: false
+    unavailable: false,
+    httpStatus: undefined
   };
 
   await submitAnswerRequest({
@@ -162,18 +165,21 @@ test('submitAnswerRequest shows unavailable when the API returns a non-OK respon
     clearTimeout: () => {},
     onSuccess: () => {},
     onTimeout: () => {},
-    onUnavailable: () => {
+    onUnavailable: (httpStatus) => {
       localThis.unavailable = true;
+      localThis.httpStatus = httpStatus;
     }
   });
 
   assert.equal(localThis.unavailable, true);
+  assert.equal(localThis.httpStatus, 503);
 });
 
 test('submitAnswerRequest shows unavailable when fetch fails', async () => {
   const localThis = {
     current: true,
-    unavailable: false
+    unavailable: false,
+    httpStatus: undefined
   };
 
   await submitAnswerRequest({
@@ -188,12 +194,14 @@ test('submitAnswerRequest shows unavailable when fetch fails', async () => {
     clearTimeout: () => {},
     onSuccess: () => {},
     onTimeout: () => {},
-    onUnavailable: () => {
+    onUnavailable: (httpStatus) => {
       localThis.unavailable = true;
+      localThis.httpStatus = httpStatus;
     }
   });
 
   assert.equal(localThis.unavailable, true);
+  assert.equal(localThis.httpStatus, null);
 });
 
 test('submitAnswerRequest shows timeout when the request aborts after the deadline', async () => {
@@ -315,6 +323,18 @@ test('readRequestParam supports autoplay entry from shared links', () => {
   assert.equal(requestParam, 'Can I have a pony?');
 });
 
+test('resolveEntryPoint classifies same-origin referrers as in_app', () => {
+  assert.equal(
+    resolveEntryPoint('https://example.test/no?request=Hi', 'https://example.test'),
+    'in_app'
+  );
+});
+
+test('resolveEntryPoint classifies other or missing referrers as external', () => {
+  assert.equal(resolveEntryPoint('https://t.co/abc', 'https://example.test'), 'external');
+  assert.equal(resolveEntryPoint('', 'https://example.test'), 'external');
+});
+
 test('copyShareLink reports success when clipboard write succeeds', async () => {
   const localThis = {
     copiedText: null,
@@ -343,24 +363,28 @@ test('copyShareLink reports success when clipboard write succeeds', async () => 
 test('copyShareLink reports failure when clipboard write throws', async () => {
   const localThis = {
     success: false,
-    failed: false
+    failed: false,
+    error: null
   };
+  const clipboardError = new Error('denied');
 
   await copyShareLink({
     text: 'https://example.test/yes?request=hi',
     writeText: async () => {
-      throw new Error('denied');
+      throw clipboardError;
     },
     onSuccess: () => {
       localThis.success = true;
     },
-    onError: () => {
+    onError: (error) => {
       localThis.failed = true;
+      localThis.error = error;
     }
   });
 
   assert.equal(localThis.success, false);
   assert.equal(localThis.failed, true);
+  assert.equal(localThis.error, clipboardError);
 });
 
 test('autoplayRequest types each character, notifies input, and submits', async () => {
@@ -429,4 +453,45 @@ test('autoplayRequest skips animation for long shared requests', async () => {
   assert.equal(localThis.inputEvents, 1);
   assert.deepEqual(localThis.waits, []);
   assert.equal(localThis.submitted, true);
+});
+
+test('trackEvent forwards the event to the Pendo agent', () => {
+  const localThis = {
+    calls: []
+  };
+
+  trackEvent(
+    {
+      track: (eventName, properties) => {
+        localThis.calls.push({ eventName, properties });
+      }
+    },
+    'share_link_copied',
+    { mode: 'yes' }
+  );
+
+  assert.deepEqual(localThis.calls, [
+    { eventName: 'share_link_copied', properties: { mode: 'yes' } }
+  ]);
+});
+
+test('trackEvent does nothing when the Pendo agent is not installed', () => {
+  assert.doesNotThrow(() => {
+    trackEvent(undefined, 'share_link_copied', { mode: 'yes' });
+    trackEvent({}, 'share_link_copied', { mode: 'yes' });
+  });
+});
+
+test('trackEvent ignores Pendo agent errors', () => {
+  assert.doesNotThrow(() => {
+    trackEvent(
+      {
+        track: () => {
+          throw new Error('agent failed');
+        }
+      },
+      'share_link_copied',
+      { mode: 'yes' }
+    );
+  });
 });
