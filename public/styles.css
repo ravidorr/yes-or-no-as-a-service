@@ -433,8 +433,8 @@ h1 {
 }
 
 .answer[data-answer="yes"] {
-  --mode-bg: var(--red);
-  --mode-fg: #fff;
+  --mode-bg: var(--no-bg);
+  --mode-fg: var(--no-fg);
 }
 
 .answer[data-answer="no"] {
@@ -580,6 +580,10 @@ h1 {
   width: 20px;
   height: 20px;
   fill: var(--ink);
+}
+
+#share-email-link svg {
+  fill: none;
 }
 
 .social a[aria-disabled="true"] {

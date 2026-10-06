@@ -64,6 +64,24 @@ test('no page submits and renders the answer', async ({ page }) => {
   await expect(page.locator('#share-url')).toHaveValue(/\/no\?request=Can\+I%3F$/);
 });
 
+test('yes and no answers share the same background color', async ({ page }) => {
+  await page.goto('/yes');
+  await page.locator('#request').fill('Can I?');
+  await page.locator('#submit').click();
+  const yesBackgroundColor = await page.locator('#answer').evaluate((element) =>
+    element.ownerDocument.defaultView.getComputedStyle(element).backgroundColor
+  );
+
+  await page.goto('/no');
+  await page.locator('#request').fill('Can I?');
+  await page.locator('#submit').click();
+  const noBackgroundColor = await page.locator('#answer').evaluate((element) =>
+    element.ownerDocument.defaultView.getComputedStyle(element).backgroundColor
+  );
+
+  expect(yesBackgroundColor).toBe(noBackgroundColor);
+});
+
 test('random result reveals its concrete answer and matching share URL', async ({ page }) => {
   await page.goto('/random');
   await page.locator('#request').fill('Can I?');
@@ -115,6 +133,7 @@ test('social links stay disabled until a share URL exists', async ({ page }) => 
   await page.locator('#submit').click();
 
   await expect(page.locator('#share-x-link')).toHaveAttribute('aria-disabled', 'false');
+  await expect(page.locator('#share-email-link svg')).toHaveCSS('fill', 'none');
 });
 
 test('shared request query autoplay submits the answer', async ({ page }) => {
