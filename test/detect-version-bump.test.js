@@ -156,7 +156,7 @@ function readHeadVersion() {
 
 test('writeVersionBumpOutputs skips when no output path is configured', () => {
   assert.doesNotThrow(() =>
-    writeVersionBumpOutputs({ bumped: false, reason: 'unchanged' }, undefined)
+    writeVersionBumpOutputs({ bumped: false, reason: 'unchanged' }, '')
   );
 });
 

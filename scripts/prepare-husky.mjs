@@ -1,6 +1,17 @@
 import { existsSync } from 'node:fs';
 import { execSync } from 'node:child_process';
-import { isExecutedModule } from '../src/run-if-main.js';
+import { pathToFileURL } from 'node:url';
+
+export function isPrepareHuskyMain(
+  moduleUrl = import.meta.url,
+  argvPath = process.argv[1]
+) {
+  if (typeof argvPath !== 'string') {
+    return false;
+  }
+
+  return moduleUrl === pathToFileURL(argvPath).href;
+}
 
 export function runPrepareHusky({
   existsSyncImpl = existsSync,
@@ -22,10 +33,10 @@ export function runPrepareHuskyCli(options = {}) {
 }
 
 export function runPrepareHuskyCliIfMain({
-  isExecutedModuleImpl = isExecutedModule,
+  isPrepareHuskyMainImpl = isPrepareHuskyMain,
   ...options
 } = {}) {
-  if (isExecutedModuleImpl(import.meta.url)) {
+  if (isPrepareHuskyMainImpl()) {
     runPrepareHuskyCli(options);
   }
 }

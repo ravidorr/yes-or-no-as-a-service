@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { runPrepareHuskyCliIfMain, runPrepareHusky } from '../scripts/prepare-husky.mjs';
+import {
+  isPrepareHuskyMain,
+  runPrepareHuskyCliIfMain,
+  runPrepareHusky
+} from '../scripts/prepare-husky.mjs';
+import { pathToFileURL } from 'node:url';
+import { resolve } from 'node:path';
 
 test('runPrepareHusky skips in CI environments', () => {
   const localThis = {
@@ -45,13 +51,27 @@ test('runPrepareHusky skips outside git repositories', () => {
   assert.equal(localThis.huskyCalled, false);
 });
 
+test('isPrepareHuskyMain matches the executed module path', () => {
+  const scriptPath = resolve('scripts/prepare-husky.mjs');
+
+  assert.equal(
+    isPrepareHuskyMain(pathToFileURL(scriptPath).href, scriptPath),
+    true
+  );
+  assert.equal(
+    isPrepareHuskyMain(pathToFileURL(scriptPath).href, resolve('test/prepare-husky.test.js')),
+    false
+  );
+  assert.equal(isPrepareHuskyMain(pathToFileURL(scriptPath).href, null), false);
+});
+
 test('runPrepareHuskyCliIfMain delegates to the husky runner', () => {
   const localThis = {
     called: false
   };
 
   runPrepareHuskyCliIfMain({
-    isExecutedModuleImpl: () => true,
+    isPrepareHuskyMainImpl: () => true,
     existsSyncImpl: () => true,
     execSyncImpl: () => {
       localThis.called = true;

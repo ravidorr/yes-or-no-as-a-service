@@ -62,7 +62,7 @@ async function assertNotFoundPage(response) {
   const body = await response.text();
   assert.match(body, /<body data-mode="404">/);
   assert.match(body, /<h1>Page not found<\/h1>/);
-  assert.match(body, /<script type="module" src="\/theme-bootstrap\.js"><\/script>/);
+  assert.match(body, /<script src="\/theme-bootstrap\.js"><\/script>/);
 
   return body;
 }
@@ -332,7 +332,7 @@ test('serves the yes UI at /yes', async () => {
   assert.match(body, />Share the link below\./);
   assert.match(body, /Try another answer/);
   assert.match(body, /id="theme-toggle"/);
-  assert.match(body, /<script type="module" src="\/theme-bootstrap\.js"><\/script>/);
+  assert.match(body, /<script src="\/theme-bootstrap\.js"><\/script>/);
   assert.match(body, /id="empty"/);
   assert.match(body, /id="status"/);
   assert.match(body, /id="error"/);
