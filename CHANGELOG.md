@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.0 - 2026-10-06
+
+- Load the Novus by Pendo web SDK on the answer pages and the 404 page, and
+  initialize it once per page load with an anonymous visitor.
+
 ## 2.1.5 - 2026-10-06
 
 - Harden release scripts against shell injection, improve shutdown and healthcheck reliability, add security headers, validate theme bootstrap storage, and expand behavioral test coverage from the code review.
