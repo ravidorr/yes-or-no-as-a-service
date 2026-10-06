@@ -2,9 +2,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { test } from 'node:test';
+import { parse } from 'yaml';
+import packageInfo from '../package.json' with { type: 'json' };
 
 const dockerfilePath = resolve('Dockerfile');
 const dockerignorePath = resolve('.dockerignore');
+const composePath = resolve('compose.yaml');
 
 test('Dockerfile uses Node 22 Alpine with production runtime contract', () => {
   const dockerfile = readFileSync(dockerfilePath, 'utf8');
@@ -41,4 +44,15 @@ test('.dockerignore excludes development-only build context', () => {
   assert.match(dockerignore, /^\.env$/m);
   assert.match(dockerignore, /^\.DS_Store$/m);
   assert.match(dockerignore, /^npm-debug\.log\*$/m);
+});
+
+test('Compose loads local environment values for the development container', () => {
+  const compose = parse(readFileSync(composePath, 'utf8'));
+
+  assert.deepEqual(compose.services.yesornoaas.env_file, ['.env']);
+  assert.deepEqual(compose.services.yesornoaas.ports, ['3000:3000']);
+});
+
+test('npm start loads an optional local environment file', () => {
+  assert.equal(packageInfo.scripts.start, 'node --env-file-if-exists=.env src/server.js');
 });
