@@ -341,6 +341,20 @@ test('serves the yes UI at /yes', async () => {
   assert.doesNotMatch(body, /type="radio"/);
 });
 
+test('does not serve the unconfigured page template as a static asset', async () => {
+  const response = await fetch(`${baseUrl}/index.html`);
+
+  await assertNotFoundPage(response);
+});
+
+test('serves styles without an external Google Fonts request', async () => {
+  const response = await fetch(`${baseUrl}/styles.css`);
+  const stylesheet = await response.text();
+
+  assert.equal(response.status, 200);
+  assert.doesNotMatch(stylesheet, /fonts\.googleapis\.com/);
+});
+
 test('serves the no UI at /no', async () => {
   const response = await fetch(`${baseUrl}/no`);
   const body = await response.text();

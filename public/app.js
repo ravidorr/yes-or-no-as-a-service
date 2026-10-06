@@ -256,9 +256,9 @@ form.addEventListener('submit', async (event) => {
   currentController?.abort();
   const token = requestToken + 1;
   requestToken = token;
+  hideResult();
   isLoading = true;
   setLoading(true);
-  hideResult();
 
   await submitAnswerRequest({
     answer,

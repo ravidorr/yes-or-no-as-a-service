@@ -167,6 +167,7 @@ test('timeout shows the error slot with specified copy', async ({ page }) => {
     await page.locator('#request').fill('Can I?');
     await page.locator('#submit').click();
 
+    await expect(page.locator('#status')).toBeVisible();
     await expect(page.locator('#error')).toBeVisible({ timeout: REQUEST_TIMEOUT_MS + 5_000 });
     await expect(page.getByText('Timed out waiting for an answer.')).toBeVisible();
     await expect(page.getByText('YESorNOaaS did not respond in time. Check your connection and ask again. Your question is kept.')).toBeVisible();

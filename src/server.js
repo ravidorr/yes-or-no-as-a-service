@@ -33,6 +33,7 @@ export function createApp({
   const publicPath = resolve(__dirname, '../public');
   const pageTemplate = readFileSync(resolve(publicPath, 'index.html'), 'utf8');
   const notFoundTemplate = readFileSync(resolve(publicPath, '404.html'), 'utf8');
+  const staticAssets = express.static(publicPath, { index: false });
 
   function renderPage(mode, res) {
     res.status(200).type('html').send(pageTemplate.replaceAll('__PAGE_MODE__', mode));
@@ -46,7 +47,14 @@ export function createApp({
   }
 
   app.use(metrics.middleware);
-  app.use(express.static(publicPath, { index: false }));
+  app.use((req, res, next) => {
+    if (req.path === '/index.html') {
+      next();
+      return;
+    }
+
+    staticAssets(req, res, next);
+  });
 
   app.all('/version', (req, res, next) => {
     if (req.method !== 'GET') {
