@@ -58,7 +58,8 @@
     "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#coverage\" \"#dist\" \"#test-results\"",
     "typecheck": "for file in src/*.js public/*.js scripts/*.mjs; do node --check \"$file\"; done",
     "check:generated": "node -e \"process.exit(0)\"",
-    "verify:release-notes": "node scripts/verify-release-notes.mjs"
+    "verify:release-notes": "node scripts/verify-release-notes.mjs",
+    "validate:security-policy": "node scripts/validate-security-policy-version.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

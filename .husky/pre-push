@@ -4,3 +4,4 @@ npm run lint
 npm run typecheck
 npm run test:coverage
 BASE_REF=origin/main node scripts/check-release.mjs
+npm run validate:security-policy
