@@ -55,7 +55,9 @@
     "lint:js": "eslint .",
     "lint:html": "html-validate public/*.html",
     "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#test-results\"",
-    "verify:release-notes": "node scripts/verify-release-notes.mjs"
+    "verify:release-notes": "node scripts/verify-release-notes.mjs",
+    "validate:security-policy": "node scripts/validate-security-policy-version.mjs",
+    "test:security-policy": "node --test scripts/validate-security-policy-version.test.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",

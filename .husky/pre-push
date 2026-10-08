@@ -1,1 +1,2 @@
 npm run verify:release-notes
+node scripts/validate-security-policy-version.mjs || exit 1
