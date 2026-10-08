@@ -4,6 +4,7 @@
 
 - Repair dependency-lock consistency, release validation, and browser UI state
   handling.
+- Add supported-version security policy validation to local hooks and CI.
 
 ## 2.2.3 - 2026-10-09
 

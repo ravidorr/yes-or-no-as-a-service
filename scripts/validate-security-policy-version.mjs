@@ -69,11 +69,12 @@ export function validateSecurityPolicyVersion(packageJson, securityPolicy) {
 export function validateSecurityPolicyFiles(
   packageJsonPath = "package.json",
   securityPolicyPath = "SECURITY.md",
+  { readFileSyncImpl = readFileSync } = {},
 ) {
   try {
     return validateSecurityPolicyVersion(
-      readFileSync(packageJsonPath, "utf8"),
-      readFileSync(securityPolicyPath, "utf8"),
+      readFileSyncImpl(packageJsonPath, "utf8"),
+      readFileSyncImpl(securityPolicyPath, "utf8"),
     );
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
