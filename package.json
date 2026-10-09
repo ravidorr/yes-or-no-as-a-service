@@ -1,6 +1,6 @@
 {
   "name": "@ravidor/yesornoaas",
-  "version": "2.2.2",
+  "version": "2.2.3",
   "description": "Yes or No as a Service: call /api/yes, /api/no, or /api/random for Yes! or No!",
   "license": "MIT",
   "funding": {
@@ -51,10 +51,13 @@
     "test:coverage": "node scripts/run-coverage.mjs",
     "test:e2e": "playwright test",
     "test:package": "node scripts/smoke-tarball.mjs",
-    "lint": "npm run lint:js && npm run lint:html && npm run lint:md",
-    "lint:js": "eslint .",
-    "lint:html": "html-validate public/*.html",
-    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#test-results\"",
+    "lint": "npm run lint:js && npm run lint:css && npm run lint:html && npm run lint:md",
+    "lint:js": "eslint --max-warnings=0 .",
+    "lint:css": "stylelint --allow-empty-input --max-warnings=0 \"**/*.css\"",
+    "lint:html": "node scripts/lint-html.mjs",
+    "lint:md": "markdownlint-cli2 \"**/*.md\" \"#node_modules\" \"#coverage\" \"#dist\" \"#test-results\"",
+    "typecheck": "for file in src/*.js public/*.js scripts/*.mjs; do node --check \"$file\"; done",
+    "check:generated": "node -e \"process.exit(0)\"",
     "verify:release-notes": "node scripts/verify-release-notes.mjs"
   },
   "dependencies": {
@@ -64,16 +67,21 @@
     "express-rate-limit": "^8.7.0"
   },
   "engines": {
-    "node": ">=22.9.0"
+    "node": ">=24.21.0 <25"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@lhci/cli": "0.15.1",
     "@playwright/test": "^1.55.1",
     "eslint": "^10.11.0",
     "globals": "^17.13.0",
     "html-validate": "^11.16.1",
     "husky": "^9.1.7",
+    "lint-staged": "17.6.0",
     "markdownlint-cli2": "^0.23.3",
+    "stylelint": "17.16.0",
+    "stylelint-config-standard": "40.0.0",
     "yaml": "^2.8.1"
-  }
+  },
+  "packageManager": "npm@11.19.0"
 }

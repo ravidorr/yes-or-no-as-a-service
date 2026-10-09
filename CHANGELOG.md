@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.3 - 2026-10-09
+
+- Establish the project quality, release, documentation, and UI-token baseline.
+
 ## 2.2.2 - 2026-10-06
 
 - Document the official Render-hosted YESorNOaaS demo and health check.

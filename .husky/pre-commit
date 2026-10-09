@@ -1,3 +1,4 @@
-node scripts/sync-package-lock.mjs
-npm run lint
-npm run test:coverage
+#!/usr/bin/env sh
+# Fast, deterministic checks on staged files (target: under 10 seconds).
+npx lint-staged
+npm run check:generated

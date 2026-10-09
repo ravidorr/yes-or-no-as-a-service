@@ -1,0 +1,4 @@
+# Public site: allow crawling by default.
+User-agent: *
+Allow: /
+Sitemap: https://yes-or-no-as-a-service.onrender.com/sitemap.xml

@@ -1,0 +1,25 @@
+:root {
+  --ink: #201e1d;
+  --ground: #f3f2f2;
+  --page: #e4e2e1;
+  --surface: #fff;
+  --muted: #605d5d;
+  --faint: #bab6b6;
+  --tint: #fff2ef;
+  --err-border: #ae1800;
+  --err-bg: #fff2ef;
+  --err-text: #4d170e;
+  --badge-fg: #fff;
+  --disabled-bg: #d7d3d3;
+  --disabled-fg: #605d5d;
+  --no-bg: #201e1d;
+  --no-fg: #fff;
+  --red: #ec3013;
+  --red-btn: #dd2b0f;
+  --red-btn-hover: #ae1800;
+  --red-btn-active: #7c1405;
+  --font: "Archivo", system-ui, sans-serif;
+  --pad: 40px;
+  --answer-size: 200px;
+  --slot-h: 200px;
+}

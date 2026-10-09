@@ -56,5 +56,5 @@ test('Compose loads local environment values for the development container', () 
 
 test('npm start loads an optional local environment file', () => {
   assert.equal(packageInfo.scripts.start, 'node --env-file-if-exists=.env src/server.js');
-  assert.equal(packageInfo.engines.node, '>=22.9.0');
+  assert.equal(packageInfo.engines.node, '>=24.21.0 <25');
 });

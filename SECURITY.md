@@ -1,13 +1,13 @@
 # Security Policy
 
-## Supported versions
+## Supported Versions
 
-Security fixes are applied to the latest release on `main`.
+Security fixes are provided for the latest release only.
 
 | Version | Supported |
 | --- | --- |
-| latest `main` | yes |
-| older releases | no |
+| 2.2.3 | ✓ |
+| Earlier releases | ✘ |
 
 ## Reporting a vulnerability
 

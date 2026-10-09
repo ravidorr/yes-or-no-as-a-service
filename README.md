@@ -15,7 +15,7 @@ with a route hint.
 
 ## Requirements
 
-- Node.js 22.9 or newer
+- Node.js 24.21.0
 - npm
 
 ## Install

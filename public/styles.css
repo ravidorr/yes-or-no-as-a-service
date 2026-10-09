@@ -2,18 +2,18 @@
   --ink: #201e1d;
   --ground: #f3f2f2;
   --page: #e4e2e1;
-  --surface: #ffffff;
+  --surface: #fff;
   --muted: #605d5d;
   --faint: #bab6b6;
   --tint: #fff2ef;
   --err-border: #ae1800;
   --err-bg: #fff2ef;
   --err-text: #4d170e;
-  --badge-fg: #ffffff;
+  --badge-fg: #fff;
   --disabled-bg: #d7d3d3;
   --disabled-fg: #605d5d;
   --no-bg: #201e1d;
-  --no-fg: #ffffff;
+  --no-fg: #fff;
   --red: #ec3013;
   --red-btn: #dd2b0f;
   --red-btn-hover: #ae1800;
@@ -23,6 +23,7 @@
   --pad: 40px;
   --answer-size: 200px;
   --slot-h: 200px;
+
   color-scheme: light;
 }
 
@@ -42,6 +43,7 @@
   --disabled-fg: #bab6b6;
   --no-bg: #f3f2f2;
   --no-fg: #201e1d;
+
   color-scheme: dark;
 }
 
@@ -62,11 +64,12 @@
     --disabled-fg: #bab6b6;
     --no-bg: #f3f2f2;
     --no-fg: #201e1d;
+
     color-scheme: dark;
   }
 }
 
-@media (max-width: 639px) {
+@media (width <= 639px) {
   :root {
     --pad: 20px;
     --answer-size: 140px;
@@ -106,7 +109,7 @@ input {
 }
 
 [hidden] {
-  display: none !important;
+  display: none;
 }
 
 .card {
@@ -162,7 +165,7 @@ input {
   width: 20px;
   height: 20px;
   fill: none;
-  stroke: currentColor;
+  stroke: currentcolor;
   stroke-width: 2;
   stroke-linecap: square;
 }
@@ -187,7 +190,7 @@ h1 {
   text-wrap: balance;
 }
 
-@media (max-width: 639px) {
+@media (width <= 639px) {
   h1 {
     font-size: 28px;
   }
@@ -230,7 +233,7 @@ h1 {
   color: var(--muted);
 }
 
-@media (max-width: 639px) {
+@media (width <= 639px) {
   .ask-row {
     grid-template-columns: 1fr;
   }
@@ -255,7 +258,7 @@ h1 {
 
 .btn-primary {
   background: var(--red-btn);
-  color: #fff;
+  color: var(--badge-fg);
   padding: 16px 20px;
   font-size: 16px;
   min-height: 44px;
@@ -279,7 +282,7 @@ h1 {
   min-width: 120px;
 }
 
-@media (max-width: 639px) {
+@media (width <= 639px) {
   .ask-row .btn-primary {
     width: 100%;
   }
@@ -289,7 +292,7 @@ h1 {
   width: 18px;
   height: 18px;
   fill: none;
-  stroke: currentColor;
+  stroke: currentcolor;
   stroke-width: 2.25;
   flex: none;
 }
@@ -320,7 +323,7 @@ h1 {
   color: var(--faint);
 }
 
-@media (max-width: 639px) {
+@media (width <= 639px) {
   .slot-mark {
     font-size: 110px;
   }
@@ -359,12 +362,11 @@ h1 {
   font-size: 26px;
   border: 2px solid var(--ink);
   backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
 
 .face-y {
   background: var(--red);
-  color: #fff;
+  color: var(--badge-fg);
 }
 
 .face-n {
@@ -457,7 +459,7 @@ h1 {
   letter-spacing: -0.05em;
 }
 
-@media (max-width: 639px) {
+@media (width <= 639px) {
   .answer {
     padding-bottom: 24px;
   }
@@ -582,7 +584,7 @@ h1 {
   fill: var(--ink);
 }
 
-#share-email-link svg {
+[id="share-email-link"] svg {
   fill: none;
 }
 
@@ -602,7 +604,7 @@ h1 {
   background: var(--tint);
 }
 
-@media (max-width: 639px) {
+@media (width <= 639px) {
   .social span {
     display: none;
   }
@@ -629,7 +631,7 @@ h1 {
   border: var(--rule);
 }
 
-.replays a {
+.replays.replays a {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -642,21 +644,21 @@ h1 {
   color: var(--ground);
 }
 
-.replays a + a {
+.replays.replays a + a {
   border-left: 2px solid var(--ground);
 }
 
-.replays a:hover {
+.replays.replays a:hover {
   background: var(--red-btn);
-  color: #fff;
+  color: var(--badge-fg);
 }
 
-@media (max-width: 639px) {
+@media (width <= 639px) {
   .replays {
     grid-template-columns: 1fr;
   }
 
-  .replays a + a {
+  .replays.replays a + a {
     border-left: 0;
     border-top: 2px solid var(--ground);
   }
@@ -716,7 +718,7 @@ h1 {
   border: var(--rule);
 }
 
-.nf-links a {
+.nf-links.nf-links.nf-links a {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -729,16 +731,16 @@ h1 {
   color: var(--ground);
 }
 
-.nf-links a + a {
+.nf-links.nf-links.nf-links a + a {
   border-left: 2px solid var(--ground);
 }
 
-.nf-links a:hover {
+.nf-links.nf-links.nf-links a:hover {
   background: var(--red-btn);
-  color: #fff;
+  color: var(--badge-fg);
 }
 
-@media (max-width: 639px) {
+@media (width <= 639px) {
   .nf-code {
     padding-bottom: 24px;
   }

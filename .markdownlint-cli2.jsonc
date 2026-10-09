@@ -4,5 +4,12 @@
     "MD013": false,
     "MD033": false
   },
-  "ignores": ["node_modules/**"]
+  "ignores": [
+    "node_modules/**",
+    "coverage/**",
+    "dist/**",
+    "test-results/**",
+    ".github/ISSUE_TEMPLATE/**",
+    ".github/PULL_REQUEST_TEMPLATE.md"
+  ]
 }

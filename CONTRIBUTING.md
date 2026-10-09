@@ -4,7 +4,7 @@ Thanks for helping improve Yes or No as a Service.
 
 ## Prerequisites
 
-- Node.js 22 or newer
+- Node.js 24.21.0
 - npm
 
 ## Setup
@@ -123,23 +123,9 @@ test.
 
 ## Git hooks
 
-When `package.json` is part of the commit, the pre-commit hook runs
-`scripts/sync-package-lock.mjs` to regenerate and stage `package-lock.json`.
-
-The pre-commit hook also runs `npm run lint` and `npm run test:coverage`.
-Commits are blocked if linters fail, tests fail, or coverage drops below 100%
-for `src/`.
-
-The pre-push hook runs `npm run verify:release-notes`. Pushes are blocked unless `package.json` is version-bumped and `CHANGELOG.md` includes a matching release entry.
-
-To skip a hook in an emergency only:
-
-```sh
-HUSKY=0 git commit ...
-HUSKY=0 git push ...
-```
-
-Use that sparingly. CI will still enforce the same checks.
+The pre-commit hook validates staged files. The pre-push hook runs linting,
+syntax checks, 100% coverage, and the release gate. Never bypass a hook; fix
+the underlying failure instead.
 
 ## Code style
 

@@ -1,1 +1,6 @@
-npm run verify:release-notes
+#!/usr/bin/env sh
+# Branch-wide checks. CI re-enforces all of these (hooks can be bypassed client-side).
+npm run lint
+npm run typecheck
+npm run test:coverage
+BASE_REF=origin/main node scripts/check-release.mjs
