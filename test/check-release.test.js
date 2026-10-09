@@ -5,9 +5,10 @@ import { fileURLToPath } from "node:url";
 
 import { requiresRelease, runCheckRelease, runCheckReleaseCli } from "../scripts/check-release.mjs";
 
-test("requiresRelease identifies package and source changes", () => {
+test("requiresRelease identifies package, public asset, and source changes", () => {
   assert.equal(requiresRelease(["README.md"]), false);
   assert.equal(requiresRelease(["package.json"]), true);
+  assert.equal(requiresRelease(["public/app.js"]), true);
   assert.equal(requiresRelease(["src/server.js"]), true);
 });
 
@@ -51,8 +52,8 @@ test("runCheckRelease delegates release-relevant changes to the validator", () =
   );
 });
 
-test("runCheckRelease reads the current Git diff by default", () => {
-  assert.deepEqual(runCheckRelease({ baseRef: "origin/main" }), []);
+test("runCheckRelease reads an empty Git diff by default", () => {
+  assert.deepEqual(runCheckRelease({ baseRef: "HEAD" }), []);
 });
 
 test("runCheckReleaseCli reports validation failures", () => {

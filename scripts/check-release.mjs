@@ -5,7 +5,11 @@ import { verifyReleaseNotesAgainstBase } from "./release-notes.mjs";
 
 export function requiresRelease(changedFiles) {
   return changedFiles.some(
-    (file) => file === "package.json" || file === "tsconfig.json" || file.startsWith("src/"),
+    (file) =>
+      file === "package.json" ||
+      file === "tsconfig.json" ||
+      file.startsWith("public/") ||
+      file.startsWith("src/"),
   );
 }
 

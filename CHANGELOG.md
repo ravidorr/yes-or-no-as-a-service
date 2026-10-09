@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.4 - 2026-10-09
+
+- Repair dependency-lock consistency, release validation, and browser UI state
+  handling.
+
 ## 2.2.3 - 2026-10-09
 
 - Establish the project quality, release, documentation, and UI-token baseline.
