@@ -19,6 +19,7 @@ for (const [path, mode, heading] of initialStates) {
     await expect(page.locator('#submit')).toBeDisabled();
     await expect(page.locator('#empty')).toBeVisible();
     await expect(page.locator('#status')).toBeHidden();
+    await expect(page.locator('#status')).toHaveCSS('display', 'none');
     await expect(page.locator('#error')).toBeHidden();
     await expect(page.locator('#answer')).toBeHidden();
     await expect(page.locator('#share')).toBeHidden();
