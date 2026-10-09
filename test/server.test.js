@@ -389,6 +389,13 @@ test('does not serve the unconfigured page template as a static asset', async ()
   await assertNotFoundPage(response);
 });
 
+test('does not serve the unconfigured 404 template as a static asset', async () => {
+  const response = await fetch(`${baseUrl}/404.html`);
+  const body = await assertNotFoundPage(response);
+
+  assert.doesNotMatch(body, /__APP_VERSION__/);
+});
+
 test('serves styles without an external Google Fonts request', async () => {
   const response = await fetch(`${baseUrl}/styles.css`);
   const stylesheet = await response.text();

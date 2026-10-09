@@ -112,8 +112,8 @@ export function createApp({
 
   app.use(metrics.middleware);
   app.use((req, res, next) => {
-    // Do not serve the unconfigured template; only /yes, /no, and /random render it.
-    if (req.path === '/index.html') {
+    // Do not serve unconfigured templates; only their routes render them.
+    if (req.path === '/index.html' || req.path === '/404.html') {
       next();
       return;
     }
