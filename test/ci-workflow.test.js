@@ -34,6 +34,25 @@ test('CI quality job runs the protected-branch checks', () => {
   assert.match(auditStep.run, /npm audit --omit=dev/);
   assert.match(pullRequestReleaseStep.run, /BASE_REF=origin\/\$\{\{ github\.base_ref \}\}/);
   assert.match(pushReleaseStep.run, /BASE_REF=\$\{\{ github\.event\.before \}\}/);
+  assert.equal(
+    pushReleaseStep.if,
+    "github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'"
+  );
+});
+
+test('CI release-notes job validates only release-relevant changes', () => {
+  const releaseNotesJob = ciWorkflow.jobs['release-notes'];
+  const pullRequestStep = releaseNotesJob.steps.find(
+    (step) => step.name === 'Validate release metadata on pull request'
+  );
+  const pushStep = releaseNotesJob.steps.find(
+    (step) => step.name === 'Validate release metadata on push'
+  );
+
+  assert.match(pullRequestStep.run, /BASE_REF=origin\/\$\{\{ github\.base_ref \}\}/);
+  assert.match(pushStep.run, /BASE_REF=\$\{\{ github\.event\.before \}\}/);
+  assert.match(pullRequestStep.run, /scripts\/check-release\.mjs/);
+  assert.match(pushStep.run, /scripts\/check-release\.mjs/);
 });
 
 test('CI lint job runs JavaScript, HTML, and Markdown linters', () => {
