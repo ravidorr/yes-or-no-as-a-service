@@ -44,7 +44,7 @@ jobs:
         run: BASE_REF=origin/${{ github.base_ref }} node scripts/check-release.mjs
 
       - name: Validate release metadata on push
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
         run: BASE_REF=${{ github.event.before }} node scripts/check-release.mjs
 
   release-notes:
