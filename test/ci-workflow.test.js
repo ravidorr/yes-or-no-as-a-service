@@ -9,10 +9,31 @@ test('CI defines the expected jobs', () => {
     'e2e',
     'lint',
     'package',
+    'quality',
     'release-notes',
     'smoke',
     'test'
   ]);
+});
+
+test('CI quality job runs the protected-branch checks', () => {
+  const qualityJob = ciWorkflow.jobs.quality;
+  const qualitySteps = getJobSteps(ciWorkflow, 'quality');
+  const auditStep = qualityJob.steps.find((step) => step.name === 'Audit production dependencies');
+  const pullRequestReleaseStep = qualityJob.steps.find(
+    (step) => step.name === 'Validate release metadata on pull request'
+  );
+  const pushReleaseStep = qualityJob.steps.find(
+    (step) => step.name === 'Validate release metadata on push'
+  );
+
+  assert.equal(getJobRun(ciWorkflow, 'quality'), 'ubuntu-latest');
+  assert.ok(qualitySteps.includes('Run lint checks'));
+  assert.ok(qualitySteps.includes('Run type checks'));
+  assert.ok(qualitySteps.includes('Run tests with 100% coverage'));
+  assert.match(auditStep.run, /npm audit --omit=dev/);
+  assert.match(pullRequestReleaseStep.run, /BASE_REF=origin\/\$\{\{ github\.base_ref \}\}/);
+  assert.match(pushReleaseStep.run, /BASE_REF=\$\{\{ github\.event\.before \}\}/);
 });
 
 test('CI lint job runs JavaScript, HTML, and Markdown linters', () => {

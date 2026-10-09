@@ -9,6 +9,44 @@ on:
       - main
 
 jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run lint checks
+        run: npm run lint
+
+      - name: Run type checks
+        run: npm run typecheck
+
+      - name: Run tests with 100% coverage
+        run: npm run test:coverage
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev
+
+      - name: Validate release metadata on pull request
+        if: github.event_name == 'pull_request'
+        run: BASE_REF=origin/${{ github.base_ref }} node scripts/check-release.mjs
+
+      - name: Validate release metadata on push
+        if: github.event_name == 'push'
+        run: BASE_REF=${{ github.event.before }} node scripts/check-release.mjs
+
   release-notes:
     runs-on: ubuntu-latest
 
