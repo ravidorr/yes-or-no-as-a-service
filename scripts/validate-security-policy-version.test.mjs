@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import packageInfo from "../package.json" with { type: "json" };
 
 import {
   validateSecurityPolicyFiles,
@@ -196,7 +197,7 @@ test("runs successfully from the command line", () => {
   );
 
   assert.equal(result.status, 0);
-  assert.match(result.stdout, /^SECURITY\.md supports package version 2\.2\.5\.\n$/);
+  assert.equal(result.stdout, `SECURITY.md supports package version ${packageInfo.version}.\n`);
   assert.equal(result.stderr, "");
 });
 

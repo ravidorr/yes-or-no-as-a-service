@@ -1,7 +1,7 @@
 openapi: 3.1.1
 info:
   title: YESorNOaaS API
-  version: 2.2.5
+  version: 2.2.6
   description: |
     Call `/api/yes` for `Yes!`, `/api/no` for `No!`, or `/api/random` for a
     random `Yes!` or `No!`.

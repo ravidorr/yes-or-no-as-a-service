@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.6 - 2026-10-09
+
+- Show the current application version in every web UI footer.
+
 ## 2.2.5 - 2026-10-09
 
 - Advance the sole supported release version to 2.2.5.
