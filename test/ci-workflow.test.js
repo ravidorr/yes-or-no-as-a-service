@@ -36,6 +36,21 @@ test('CI quality job runs the protected-branch checks', () => {
   assert.match(pushReleaseStep.run, /BASE_REF=\$\{\{ github\.event\.before \}\}/);
 });
 
+test('CI release-notes job validates only release-relevant changes', () => {
+  const releaseNotesJob = ciWorkflow.jobs['release-notes'];
+  const pullRequestStep = releaseNotesJob.steps.find(
+    (step) => step.name === 'Validate release metadata on pull request'
+  );
+  const pushStep = releaseNotesJob.steps.find(
+    (step) => step.name === 'Validate release metadata on push'
+  );
+
+  assert.match(pullRequestStep.run, /BASE_REF=origin\/\$\{\{ github\.base_ref \}\}/);
+  assert.match(pushStep.run, /BASE_REF=\$\{\{ github\.event\.before \}\}/);
+  assert.match(pullRequestStep.run, /scripts\/check-release\.mjs/);
+  assert.match(pushStep.run, /scripts\/check-release\.mjs/);
+});
+
 test('CI lint job runs JavaScript, HTML, and Markdown linters', () => {
   assert.equal(getJobRun(ciWorkflow, 'lint'), 'ubuntu-latest');
   assert.ok(getJobSteps(ciWorkflow, 'lint').includes('Run linters'));

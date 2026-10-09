@@ -56,13 +56,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Verify version and changelog on pull request
+      - name: Validate release metadata on pull request
         if: github.event_name == 'pull_request'
-        run: node scripts/verify-release-notes.mjs --base origin/${{ github.base_ref }}
+        run: BASE_REF=origin/${{ github.base_ref }} node scripts/check-release.mjs
 
-      - name: Verify version and changelog on push
+      - name: Validate release metadata on push
         if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
-        run: node scripts/verify-release-notes.mjs --base ${{ github.event.before }}
+        run: BASE_REF=${{ github.event.before }} node scripts/check-release.mjs
 
   test:
     runs-on: ubuntu-latest
