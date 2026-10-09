@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.5 - 2026-10-09
+
+- Advance the sole supported release version to 2.2.5.
+
 ## 2.2.4 - 2026-10-09
 
 - Repair dependency-lock consistency, release validation, and browser UI state

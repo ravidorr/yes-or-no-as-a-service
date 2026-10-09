@@ -196,7 +196,7 @@ test("runs successfully from the command line", () => {
   );
 
   assert.equal(result.status, 0);
-  assert.match(result.stdout, /^SECURITY\.md supports package version 2\.2\.3\.\n$/);
+  assert.match(result.stdout, /^SECURITY\.md supports package version 2\.2\.5\.\n$/);
   assert.equal(result.stderr, "");
 });
 
