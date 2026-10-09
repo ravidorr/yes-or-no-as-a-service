@@ -672,6 +672,16 @@ h1 {
   font-weight: 800;
 }
 
+.app-footer {
+  padding: 16px var(--pad);
+  border-top: var(--rule);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .nf-top {
   display: flex;
   flex-direction: column;

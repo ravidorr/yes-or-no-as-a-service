@@ -335,6 +335,16 @@ test('serves the yes UI at /yes', async () => {
   assert.doesNotMatch(body, /__PENDO_SNIPPET__/);
 });
 
+test('renders the package version in every HTML footer', async () => {
+  for (const route of ['/yes', '/no', '/random', '/missing']) {
+    const response = await fetch(`${baseUrl}${route}`);
+    const body = await response.text();
+
+    assert.match(body, new RegExp(`<footer class="app-footer">Version ${packageInfo.version}</footer>`));
+    assert.doesNotMatch(body, /__APP_VERSION__/);
+  }
+});
+
 test('creates Pendo markup only for a valid public app ID', () => {
   const markup = createPendoSnippet('cd612b6e-f576-4f2f-9d59-d35cf9ffe16f');
 
@@ -377,6 +387,13 @@ test('does not serve the unconfigured page template as a static asset', async ()
   const response = await fetch(`${baseUrl}/index.html`);
 
   await assertNotFoundPage(response);
+});
+
+test('does not serve the unconfigured 404 template as a static asset', async () => {
+  const response = await fetch(`${baseUrl}/404.html`);
+  const body = await assertNotFoundPage(response);
+
+  assert.doesNotMatch(body, /__APP_VERSION__/);
 });
 
 test('serves styles without an external Google Fonts request', async () => {

@@ -89,7 +89,12 @@ export function createApp({
     res
       .status(200)
       .type('html')
-      .send(pageTemplate.replaceAll('__PAGE_MODE__', mode).replace('__PENDO_SNIPPET__', pendoSnippet));
+      .send(
+        pageTemplate
+          .replaceAll('__PAGE_MODE__', mode)
+          .replace('__PENDO_SNIPPET__', pendoSnippet)
+          .replace('__APP_VERSION__', packageInfo.version)
+      );
   }
   const resolvedRateLimitConfig = rateLimitConfig
     ? validateRateLimitConfig(rateLimitConfig)
@@ -107,8 +112,8 @@ export function createApp({
 
   app.use(metrics.middleware);
   app.use((req, res, next) => {
-    // Do not serve the unconfigured template; only /yes, /no, and /random render it.
-    if (req.path === '/index.html') {
+    // Do not serve unconfigured templates; only their routes render them.
+    if (req.path === '/index.html' || req.path === '/404.html') {
       next();
       return;
     }
@@ -197,7 +202,14 @@ export function createApp({
   });
 
   app.use((req, res) => {
-    res.status(404).type('html').send(notFoundTemplate.replace('__PENDO_SNIPPET__', pendoSnippet));
+    res
+      .status(404)
+      .type('html')
+      .send(
+        notFoundTemplate
+          .replace('__PENDO_SNIPPET__', pendoSnippet)
+          .replace('__APP_VERSION__', packageInfo.version)
+      );
   });
 
   return app;
