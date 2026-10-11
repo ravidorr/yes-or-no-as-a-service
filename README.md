@@ -9,12 +9,6 @@
 [![Node.js](https://img.shields.io/badge/Node.js-24-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![ESLint](https://img.shields.io/badge/ESLint-10-4B32C3?logo=eslint&logoColor=white)](https://eslint.org/)
 [![API + CLI + MCP](https://img.shields.io/badge/Stack-API%20%2B%20CLI%20%2B%20MCP-007EC6?logo=openapi-initiative&logoColor=white)](https://github.com/ravidorr/yes-or-no-as-a-service)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://github.com/ravidorr/yes-or-no-as-a-service/pulls)
-[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/ravidorr/yes-or-no-as-a-service/graphs/commit-activity)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-24-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![ESLint](https://img.shields.io/badge/ESLint-10-4B32C3?logo=eslint&logoColor=white)](https://eslint.org/)
-[![API + CLI + MCP](https://img.shields.io/badge/Stack-API%20%2B%20CLI%20%2B%20MCP-007EC6?logo=openapi-initiative&logoColor=white)](https://github.com/ravidorr/yes-or-no-as-a-service)
 Yes or No as a Service.
 
 Call the answer routes:
