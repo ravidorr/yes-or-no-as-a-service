@@ -4,6 +4,10 @@ import { getJobRun, getJobSteps, readWorkflow } from './workflow-utils.js';
 
 const ciWorkflow = readWorkflow('.github/workflows/ci.yml');
 
+test('CI restricts the default GitHub token to repository contents', () => {
+  assert.deepEqual(ciWorkflow.permissions, { contents: 'read' });
+});
+
 test('CI defines the expected jobs', () => {
   assert.deepEqual(Object.keys(ciWorkflow.jobs).sort(), [
     'e2e',

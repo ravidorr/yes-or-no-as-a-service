@@ -21,6 +21,21 @@ async function waitForMetric(metrics, pattern, { timeoutMs = 200, intervalMs = 5
   throw new Error(`Timed out waiting for metric matching ${pattern}`);
 }
 
+async function waitForSignal(signal, description, timeoutMs = 200) {
+  let timeoutId;
+
+  try {
+    await Promise.race([
+      signal,
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(`Timed out waiting for ${description}`)), timeoutMs);
+      })
+    ]);
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 async function startApp(configure) {
   const app = express();
   configure(app);
@@ -165,17 +180,23 @@ test('middleware observes non-GET /metrics not_found traffic', async () => {
 
 test('middleware decrements in-flight gauge when the client disconnects early', async () => {
   const metrics = createMetrics();
+  let markRequestStarted;
+  const requestStarted = new Promise((resolve) => {
+    markRequestStarted = resolve;
+  });
   const { baseUrl, close } = await startApp((app) => {
     app.use(metrics.middleware);
-    app.get('/slow', (_req, res) => {
-      setTimeout(() => {
+    app.get('/slow', (req, res) => {
+      markRequestStarted();
+      const responseTimer = setTimeout(() => {
         res.status(200).send('done');
       }, 1000);
+      req.once('close', () => clearTimeout(responseTimer));
     });
   });
 
   try {
-    await new Promise((resolve) => {
+    const clientClosed = new Promise((resolve) => {
       let settled = false;
 
       function finish() {
@@ -187,19 +208,19 @@ test('middleware decrements in-flight gauge when the client disconnects early', 
         resolve();
       }
 
-      const client = httpRequest(`${baseUrl}/slow`, (response) => {
-        response.on('data', () => {});
-      });
+      const client = httpRequest(`${baseUrl}/slow`);
 
       client.on('error', finish);
-      client.on('socket', () => {
-        setTimeout(() => {
-          client.destroy();
-          finish();
-        }, 10);
-      });
+      client.on('close', finish);
       client.end();
+
+      requestStarted.then(() => {
+        client.destroy();
+      });
     });
+
+    await waitForSignal(requestStarted, 'the slow request to start');
+    await waitForSignal(clientClosed, 'the client connection to close');
 
     const text = await waitForMetric(
       metrics,

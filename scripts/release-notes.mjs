@@ -54,10 +54,9 @@ export function shouldValidateReleaseNotes(changedFiles) {
 }
 
 export function hasChangelogEntry(changelog, version) {
-  const escapedVersion = version.replace(/\./g, '\\.');
-  const pattern = new RegExp(`^## ${escapedVersion} - `, 'm');
+  parseVersion(version);
 
-  return pattern.test(changelog);
+  return changelog.split('\n').some((line) => line.startsWith(`## ${version} - `));
 }
 
 export function extractChangelogSection(changelog, version) {

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.8 - 2026-10-11
+
+- Remove unused Lighthouse CI tooling and resolve its transitive development
+  dependency alerts.
+- Restrict CI token permissions and remediate CodeQL sanitization findings.
+
 ## 2.2.7 - 2026-10-11
 
 - Add verified Shields.io badge rows to the root README.

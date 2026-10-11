@@ -65,6 +65,13 @@ test('hasChangelogEntry matches release headings', () => {
   assert.equal(hasChangelogEntry(changelog, '0.1.0'), false);
 });
 
+test('hasChangelogEntry accepts only SemVer release versions', () => {
+  assert.throws(
+    () => hasChangelogEntry('# Changelog\n', '0.1.1\\invalid'),
+    /Invalid semver/
+  );
+});
+
 test('extractChangelogSection returns the release body for a version', () => {
   const changelog = `# Changelog
 
