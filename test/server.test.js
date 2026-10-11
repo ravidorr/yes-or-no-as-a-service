@@ -241,7 +241,7 @@ test('serves the OpenAPI specification', async () => {
   assert.equal(response.headers.get('content-type'), 'text/yaml; charset=utf-8');
   assert.match(document, /^openapi: 3\.1\.1$/m);
   assert.match(document, /^  title: YESorNOaaS API$/m);
-  assert.match(document, new RegExp(`^  version: ${packageInfo.version.replace(/\./g, '\\.')}$`, 'm'));
+  assert.ok(document.split('\n').includes(`  version: ${packageInfo.version}`));
   assert.match(document, /ThrottledResponse:/);
   assert.match(document, /x-yesornoaas-unknown-routes:/);
 });
