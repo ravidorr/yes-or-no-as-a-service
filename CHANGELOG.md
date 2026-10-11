@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.7 - 2026-10-11
+
+- Add verified Shields.io badge rows to the root README.
+
 ## 2.2.6 - 2026-10-09
 
 - Show the current application version in every web UI footer.
