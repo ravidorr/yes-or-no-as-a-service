@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { after, before, test } from 'node:test';
 import { parse as parseYaml } from 'yaml';
 import packageInfo from '../package.json' with { type: 'json' };
+import { assertMetricsContentType } from './metrics-content-type.js';
 import { UNKNOWN_ROUTE_HINT } from '../src/responses.js';
 import { app, createApp } from '../src/server.js';
 
@@ -43,7 +44,7 @@ test('live endpoints match the OpenAPI response contracts', async () => {
 
   const metricsResponse = await fetch(`${baseUrl}/metrics`);
   assert.equal(metricsResponse.status, 200);
-  assert.match(metricsResponse.headers.get('content-type'), /^text\/plain; charset=utf-8; version=0\.0\.4$/);
+  assertMetricsContentType(metricsResponse.headers.get('content-type'));
 
   const yesResponse = await fetch(`${baseUrl}/api/yes`, { method: 'POST' });
   assert.equal(yesResponse.status, 200);

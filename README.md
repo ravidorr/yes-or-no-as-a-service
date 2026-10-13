@@ -96,7 +96,7 @@ Prometheus metrics:
 curl http://localhost:3000/metrics
 ```
 
-Output is Prometheus text format (`text/plain; charset=utf-8; version=0.0.4`).
+Output is Prometheus text format (`text/plain` with `charset=utf-8` and `version=0.0.4`; parameter order may vary).
 The endpoint is public, exempt from rate limiting, and remains available during
 graceful shutdown.
 
