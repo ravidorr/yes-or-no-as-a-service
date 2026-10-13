@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.9 - 2026-10-13
+
+- Bump `express` to 5.3.0 (transitive security fixes for `qs` and `proxy-addr`).
+- Accept either Prometheus metrics `Content-Type` parameter order after Express
+  5.3 `content-type` formatting changes.
+
 ## 2.2.8 - 2026-10-11
 
 - Remove unused Lighthouse CI tooling and resolve its transitive development

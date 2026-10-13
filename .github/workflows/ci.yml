@@ -234,7 +234,12 @@ jobs:
           [ "$(cat version.txt)" = "$expected_version" ]
 
           metrics_type="$(curl --fail --silent --show-error --max-time 5 --output metrics.txt --write-out '%{content_type}' http://127.0.0.1:3000/metrics)"
-          [ "$metrics_type" = "text/plain; charset=utf-8; version=0.0.4" ]
+          METRICS_TYPE="$metrics_type" node -e '
+            const re = /^text\/plain; (?:charset=utf-8; version=0\.0\.4|version=0\.0\.4; charset=utf-8)$/;
+            if (!re.test(process.env.METRICS_TYPE)) {
+              throw new Error(`Unexpected metrics content-type: ${process.env.METRICS_TYPE}`);
+            }
+          '
           grep -q 'yesornoaas_http_requests_total' metrics.txt
 
           yes_type="$(curl --fail --silent --show-error --max-time 5 --output yes.html --write-out '%{content_type}' http://127.0.0.1:3000/yes)"

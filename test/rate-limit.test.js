@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { UNKNOWN_ROUTE_HINT } from '../src/responses.js';
 import { createApp } from '../src/server.js';
+import { assertMetricsContentType } from './metrics-content-type.js';
 
 const strictRateLimitConfig = { windowMs: 60_000, max: 2 };
 
@@ -200,7 +201,7 @@ test('does not throttle GET /metrics even after the configured limit is exhauste
 
     const metrics = await fetch(`${baseUrl}/metrics`);
     assert.equal(metrics.status, 200);
-    assert.match(metrics.headers.get('content-type'), /^text\/plain; charset=utf-8; version=0\.0\.4$/);
+    assertMetricsContentType(metrics.headers.get('content-type'));
   } finally {
     await close();
   }
