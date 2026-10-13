@@ -79,7 +79,8 @@ and publishes `@ravidor/yesornoaas` to npm via
 [Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) (OIDC). No
 long-lived `NPM_TOKEN` secret is required.
 
-Before the first automated publish, maintainers must:
+See [docs/NPM_BOOTSTRAP.md](docs/NPM_BOOTSTRAP.md) for the full checklist and
+troubleshooting. Before the first automated publish, maintainers must:
 
 1. Authenticate to npm and confirm the account owns the `@ravidor` scope:
 
@@ -95,17 +96,21 @@ Before the first automated publish, maintainers must:
    ```sh
    npm run lint
    npm run test:coverage
-   npm publish --access public --provenance
+   npm publish --access public
    npm view @ravidor/yesornoaas version
    ```
+
+   Do not use `--provenance` for this local bootstrap publish; GitHub Actions
+   adds provenance on automated releases.
 
 3. On npm, open `@ravidor/yesornoaas` → **Settings** → **Trusted Publisher** →
    **GitHub Actions** and link `ravidorr/yes-or-no-as-a-service` with workflow
    file `release.yml`.
 
 When that same version later merges to `main`, the release workflow skips npm
-publish if the version is already on the registry and still creates the GitHub
-release and container image.
+publish if the version is already on the registry. If the package is not on npm
+yet, publish is skipped and **Verify npm release** blocks the GitHub Release
+until bootstrap completes.
 
 To smoke-test the publish tarball locally before a release:
 

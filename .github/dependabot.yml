@@ -5,6 +5,13 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # Stale advisory or no resolvable upgrade path in this lockfile.
+      - dependency-name: uuid
+      - dependency-name: tmp
+      # Pinned via package.json overrides for markdownlint-cli2 / micromark-math.
+      - dependency-name: katex
+      - dependency-name: smol-toml
     groups:
       npm-production:
         patterns:

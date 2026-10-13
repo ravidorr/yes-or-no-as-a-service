@@ -92,11 +92,17 @@ jobs:
         env:
           PACKAGE_VERSION: ${{ needs.detect.outputs.version }}
         run: |
-          if npm view "@ravidor/yesornoaas@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
-            echo "Version ${PACKAGE_VERSION} is already on npm; skipping publish."
-          else
-            npm publish --access public --provenance
-          fi
+          # Registry lookups: scripts/release-npm-registry.sh treats 404 as missing
+          # and fails the step on timeouts, 5xx, and other npm errors.
+          PACKAGE="$(node -p "require('./package.json').name")"
+          bash scripts/release-npm-registry.sh publish "${PACKAGE}" "${PACKAGE_VERSION}"
+
+      - name: Verify npm release
+        env:
+          PACKAGE_VERSION: ${{ needs.detect.outputs.version }}
+        run: |
+          PACKAGE="$(node -p "require('./package.json').name")"
+          bash scripts/release-npm-registry.sh verify "${PACKAGE}" "${PACKAGE_VERSION}"
 
       - name: Create GitHub release
         env:

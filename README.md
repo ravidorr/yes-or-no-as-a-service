@@ -38,8 +38,9 @@ npm view @ravidor/yesornoaas version
 ```
 
 The first npm release must be published manually by a maintainer with access to
-the `@ravidor` scope. See [CONTRIBUTING.md](CONTRIBUTING.md) for bootstrap
-steps. Later releases are automated through GitHub Actions Trusted Publishing.
+the `@ravidor` scope. See [docs/NPM_BOOTSTRAP.md](docs/NPM_BOOTSTRAP.md) and
+[CONTRIBUTING.md](CONTRIBUTING.md). Later releases use GitHub Actions Trusted
+Publishing once bootstrap and the npm trusted publisher are configured.
 
 Or clone and run locally:
 
