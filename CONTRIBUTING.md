@@ -105,8 +105,9 @@ troubleshooting. Before the first automated publish, maintainers must:
    file `release.yml`.
 
 When that same version later merges to `main`, the release workflow skips npm
-publish if the version is already on the registry and still creates the GitHub
-release and container image.
+publish if the version is already on the registry. If the package is not on npm
+yet, publish is skipped and **Verify npm release** blocks the GitHub Release
+until bootstrap completes.
 
 To smoke-test the publish tarball locally before a release:
 

@@ -93,16 +93,14 @@ jobs:
           PACKAGE_VERSION: ${{ needs.detect.outputs.version }}
         run: |
           PACKAGE="$(node -p "require('./package.json').name")"
-          if npm view "${PACKAGE}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
-            echo "Version ${PACKAGE_VERSION} is already on npm; skipping publish."
-            exit 0
-          fi
-          if ! npm view "${PACKAGE}@latest" version >/dev/null 2>&1; then
-            echo "::warning::${PACKAGE} is not on npm yet. Skipping publish until bootstrap completes."
-            echo "See docs/NPM_BOOTSTRAP.md"
-            exit 0
-          fi
-          npm publish --access public --provenance
+          bash scripts/release-npm-registry.sh publish "${PACKAGE}" "${PACKAGE_VERSION}"
+
+      - name: Verify npm release
+        env:
+          PACKAGE_VERSION: ${{ needs.detect.outputs.version }}
+        run: |
+          PACKAGE="$(node -p "require('./package.json').name")"
+          bash scripts/release-npm-registry.sh verify "${PACKAGE}" "${PACKAGE_VERSION}"
 
       - name: Create GitHub release
         env:

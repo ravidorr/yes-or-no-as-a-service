@@ -4,8 +4,9 @@ Automated releases use GitHub Actions **Trusted Publishing** (OIDC) in
 `.github/workflows/release.yml`. npm only accepts OIDC publishes for a package
 that **already exists** on the registry and has a trusted publisher configured.
 
-Today `@ravidor/yesornoaas` is **not** on npm, so Release runs fail at
-`npm publish` with `404 Not Found` until bootstrap completes.
+Today `@ravidor/yesornoaas` is **not** on npm. Release skips automated publish
+with a warning, then **Verify npm release** fails and blocks the GitHub Release
+until bootstrap completes.
 
 ## One-time maintainer checklist
 
@@ -70,9 +71,9 @@ npm view @ravidor/yesornoaas version
 
 | Registry state | Action |
 | --- | --- |
-| Version already published | Skip `npm publish`; still create GitHub Release and GHCR image if needed |
-| Package missing on npm | Skip `npm publish` with a warning; see step 3 above |
-| Package exists, version new | `npm publish --access public --provenance` via OIDC |
+| Version already published | Skip `npm publish`; verify passes; create GitHub Release and GHCR image |
+| Package missing on npm | Skip `npm publish` with a warning; verify fails; no GitHub Release |
+| Package exists, version new | `npm publish --access public --provenance` via OIDC, then verify |
 
 ## Troubleshooting
 
