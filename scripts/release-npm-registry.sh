@@ -11,7 +11,7 @@ npm_view_spec() {
     return 0
   fi
 
-  if grep -qiE '404| E404 |not found|npm404' "$err"; then
+  if grep -qiE '404| E404 |not found|npm404|code E404' "$err"; then
     rm -f "$err"
     return 1
   fi

@@ -82,6 +82,16 @@ test('publish fails on non-404 npm view errors', () => {
   assert.match(result.stderr, /registry error/);
 });
 
+test('publish treats npm E404 as a missing package', () => {
+  const result = runScript('publish', '@ravidor/yesornoaas', '2.2.8', {
+    '@ravidor/yesornoaas@2.2.8': 'echo "npm error code E404" >&2; echo "404 Not Found" >&2; exit 1',
+    '@ravidor/yesornoaas@latest': 'echo "npm error code E404" >&2; echo "404 Not Found" >&2; exit 1'
+  });
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /not on npm yet/);
+});
+
 test('verify fails when the package is not bootstrapped on npm', () => {
   const result = runScript('verify', '@ravidor/yesornoaas', '2.2.8', {
     '@ravidor/yesornoaas@latest': 'echo "404 Not Found" >&2; exit 1',

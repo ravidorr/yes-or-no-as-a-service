@@ -96,9 +96,12 @@ troubleshooting. Before the first automated publish, maintainers must:
    ```sh
    npm run lint
    npm run test:coverage
-   npm publish --access public --provenance
+   npm publish --access public
    npm view @ravidor/yesornoaas version
    ```
+
+   Do not use `--provenance` for this local bootstrap publish; GitHub Actions
+   adds provenance on automated releases.
 
 3. On npm, open `@ravidor/yesornoaas` → **Settings** → **Trusted Publisher** →
    **GitHub Actions** and link `ravidorr/yes-or-no-as-a-service` with workflow

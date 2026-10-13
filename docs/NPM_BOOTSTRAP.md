@@ -15,7 +15,7 @@ until bootstrap completes.
 ```sh
 npm login
 npm whoami
-npm access ls-packages
+npm access list packages
 ```
 
 You need permission to publish under the `@ravidor` scope.
@@ -34,12 +34,13 @@ npm run test:coverage
 ### 3. Bootstrap publish (creates the package on npm)
 
 ```sh
-npm publish --access public --provenance
+npm publish --access public
 npm view @ravidor/yesornoaas version
 ```
 
 This must be the **first** publish for `@ravidor/yesornoaas`. It uses your user
-session, not GitHub OIDC.
+session, not GitHub OIDC. Do **not** pass `--provenance` here; provenance requires
+a supported cloud CI runner. GitHub Actions adds provenance on later releases.
 
 ### 4. Configure Trusted Publisher on npm
 
@@ -55,7 +56,11 @@ Save the trusted publisher **after** the package exists from step 3.
 
 ### 5. Verify automation
 
-**Option A:** Re-run the latest failed [Release workflow](https://github.com/ravidorr/yes-or-no-as-a-service/actions/workflows/release.yml) on `main` if that commit is still the release tip and the version is not yet on npm.
+**Option A:** After steps 3–4 succeed (`npm view @ravidor/yesornoaas version` matches
+`package.json` and Trusted Publisher is saved), re-run the latest [Release
+workflow](https://github.com/ravidorr/yes-or-no-as-a-service/actions/workflows/release.yml)
+on `main` for the release commit. Publish skips the existing bootstrap version,
+verify passes, and the GitHub Release is created.
 
 **Option B:** Merge a patch version bump (`package.json` + `CHANGELOG.md`). CI
 must pass; Release should publish via OIDC, push GHCR, and create the GitHub

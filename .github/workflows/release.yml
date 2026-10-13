@@ -92,6 +92,8 @@ jobs:
         env:
           PACKAGE_VERSION: ${{ needs.detect.outputs.version }}
         run: |
+          # Registry lookups: scripts/release-npm-registry.sh treats 404 as missing
+          # and fails the step on timeouts, 5xx, and other npm errors.
           PACKAGE="$(node -p "require('./package.json').name")"
           bash scripts/release-npm-registry.sh publish "${PACKAGE}" "${PACKAGE_VERSION}"
 
