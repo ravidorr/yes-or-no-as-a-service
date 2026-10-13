@@ -5,6 +5,7 @@ import { after, before, test } from 'node:test';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import packageInfo from '../package.json' with { type: 'json' };
+import { assertMetricsContentType } from './metrics-content-type.js';
 import {
   app,
   createPendoSnippet,
@@ -96,7 +97,7 @@ test('returns Prometheus metrics with runtime and HTTP families', async () => {
   const body = await response.text();
 
   assert.equal(response.status, 200);
-  assert.match(response.headers.get('content-type'), /^text\/plain; charset=utf-8; version=0\.0\.4$/);
+  assertMetricsContentType(response.headers.get('content-type'));
   assert.match(body, /# HELP process_cpu_user_seconds_total/);
   assert.match(body, /# HELP yesornoaas_http_requests_total/);
   assert.match(body, /# HELP yesornoaas_http_request_duration_seconds/);
