@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.10 - 2026-10-13
+
+- Bump `@playwright/test` to 1.64.0 for end-to-end test tooling.
+
 ## 2.2.9 - 2026-10-13
 
 - Bump `express` to 5.3.0 (transitive security fixes for `qs` and `proxy-addr`).
