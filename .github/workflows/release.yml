@@ -92,11 +92,17 @@ jobs:
         env:
           PACKAGE_VERSION: ${{ needs.detect.outputs.version }}
         run: |
-          if npm view "@ravidor/yesornoaas@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+          PACKAGE="$(node -p "require('./package.json').name")"
+          if npm view "${PACKAGE}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
             echo "Version ${PACKAGE_VERSION} is already on npm; skipping publish."
-          else
-            npm publish --access public --provenance
+            exit 0
           fi
+          if ! npm view "${PACKAGE}@latest" version >/dev/null 2>&1; then
+            echo "::warning::${PACKAGE} is not on npm yet. Skipping publish until bootstrap completes."
+            echo "See docs/NPM_BOOTSTRAP.md"
+            exit 0
+          fi
+          npm publish --access public --provenance
 
       - name: Create GitHub release
         env:

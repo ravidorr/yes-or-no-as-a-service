@@ -79,7 +79,8 @@ and publishes `@ravidor/yesornoaas` to npm via
 [Trusted Publishing](https://docs.npmjs.com/trusted-publishers/) (OIDC). No
 long-lived `NPM_TOKEN` secret is required.
 
-Before the first automated publish, maintainers must:
+See [docs/NPM_BOOTSTRAP.md](docs/NPM_BOOTSTRAP.md) for the full checklist and
+troubleshooting. Before the first automated publish, maintainers must:
 
 1. Authenticate to npm and confirm the account owns the `@ravidor` scope:
 

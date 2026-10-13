@@ -5,6 +5,14 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # Not in the current lockfile; Dependabot security jobs still open alerts
+      # from stale graphs and cannot resolve a safe path (e.g. via @lhci/cli).
+      - dependency-name: uuid
+      - dependency-name: tmp
+      # Pinned via package.json overrides for markdownlint-cli2 / micromark-math.
+      - dependency-name: katex
+      - dependency-name: smol-toml
     groups:
       npm-production:
         patterns:
