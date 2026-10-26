@@ -62,7 +62,7 @@
     "validate:security-policy": "node scripts/validate-security-policy-version.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/sdk": "^1.32.2",
     "@prometheus-io/client": "^0.16.1",
     "express": "^5.3.0",
     "express-rate-limit": "^8.7.0"
