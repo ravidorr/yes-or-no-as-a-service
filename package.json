@@ -72,13 +72,13 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.64.0",
-    "eslint": "^10.11.0",
+    "@playwright/test": "^1.64.1",
+    "eslint": "^10.13.0",
     "globals": "^17.13.0",
-    "html-validate": "^11.16.1",
+    "html-validate": "^11.17.0",
     "husky": "^9.1.7",
     "lint-staged": "17.6.0",
-    "markdownlint-cli2": "^0.23.3",
+    "markdownlint-cli2": "^0.24.0",
     "stylelint": "17.16.0",
     "stylelint-config-standard": "40.0.0",
     "yaml": "^2.8.1"
