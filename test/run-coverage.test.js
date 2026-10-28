@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import {
   buildCoverageArgs,
+  buildCoverageEnv,
   runCoverageCliIfMain,
   runCoverage
 } from '../scripts/run-coverage.mjs';
@@ -18,6 +19,40 @@ test('buildCoverageArgs includes every production directory', () => {
     '--test-coverage-branches=100',
     '--test-coverage-functions=100'
   ]);
+});
+
+test('buildCoverageEnv disables colors even when the shell forces them', () => {
+  const env = buildCoverageEnv({ PATH: '/bin', FORCE_COLOR: '1', TERM: 'xterm-256color' });
+
+  assert.deepEqual(env, {
+    PATH: '/bin',
+    TERM: 'xterm-256color',
+    NO_COLOR: '1',
+    NODE_DISABLE_COLORS: '1'
+  });
+});
+
+test('runCoverage runs the test runner without colored output', () => {
+  const localThis = { options: null };
+
+  runCoverage({
+    spawnSyncImpl: (_execPath, _args, options) => {
+      localThis.options = options;
+
+      return {
+        status: 0,
+        stdout: '# start of coverage report\n# src |  |  |  |\n#  cli.js | 100 | 100 | 100 |\n# end of coverage report\n'
+      };
+    },
+    expectedFiles: ['src/cli.js'],
+    stdout: { write() {} },
+    stderr: { write() {} },
+    exit() {}
+  });
+
+  assert.equal(localThis.options.env.NO_COLOR, '1');
+  assert.equal(localThis.options.env.NODE_DISABLE_COLORS, '1');
+  assert.equal(localThis.options.env.FORCE_COLOR, undefined);
 });
 
 test('runCoverage treats a missing exit status as failure', () => {

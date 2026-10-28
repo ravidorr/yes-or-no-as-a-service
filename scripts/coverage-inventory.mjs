@@ -30,7 +30,14 @@ export function listSourceFiles(directories = PRODUCTION_DIRECTORIES) {
 // Matches Node's --experimental-test-coverage report marker prefix.
 const COVERAGE_REPORT_PREFIX = '[#ℹ]';
 
-export function extractCoverageReport(output) {
+const ANSI_ESCAPE_PATTERN = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
+
+export function stripAnsi(output) {
+  return output.replace(ANSI_ESCAPE_PATTERN, '');
+}
+
+export function extractCoverageReport(rawOutput) {
+  const output = stripAnsi(rawOutput);
   const startMatch = output.match(
     new RegExp(`${COVERAGE_REPORT_PREFIX} start of coverage report`)
   );
