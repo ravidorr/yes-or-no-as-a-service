@@ -31,6 +31,11 @@ web UI interfaces.
   committed.
 - Every pull request that changes files outside `.github/workflows/` updates
   `CHANGELOG.md` and bumps the version.
+- Dependabot PRs get their version bump and changelog entry from
+  `.github/workflows/dependabot-release-bump.yml` (needs the
+  `RELEASE_BUMP_TOKEN` Dependabot secret). That commit stops Dependabot from
+  rebasing the PR; comment `@dependabot recreate` to refresh it after `main`
+  moves.
 - Track open work in `TODO.md`.
 
 ## Layout
