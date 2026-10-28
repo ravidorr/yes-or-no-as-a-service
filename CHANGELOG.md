@@ -3,7 +3,11 @@
 ## 2.2.14 - 2026-10-28
 
 - Add a workflow that bumps the patch version and adds a changelog entry on
-  Dependabot pull requests, so they pass the release gate.
+  Dependabot pull requests, so they pass the release gate. The entry lists the
+  changed dependencies, and scoped package names are put in code so release
+  notes cannot notify users.
+- Document that the bump commit stops Dependabot from rebasing the PR, and that
+  `@dependabot recreate` refreshes it.
 
 ## 2.2.13 - 2026-10-28
 

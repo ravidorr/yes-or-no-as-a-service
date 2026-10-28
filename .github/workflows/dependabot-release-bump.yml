@@ -12,6 +12,12 @@ name: Dependabot Release Bump
 # the bump commit pushed with that token does not start another run. The bump
 # script runs from a checkout of the base branch, so Dependabot branches that
 # predate it still work.
+#
+# Dependabot treats the bump commit as a manual edit and stops rebasing that PR
+# on its own. If main moves on (for example another bump merges first) and the
+# PR conflicts or needs a newer version, comment "@dependabot recreate" on it.
+# Dependabot then rebuilds the branch and this workflow bumps again from the
+# latest main.
 
 on:
   pull_request:
@@ -20,6 +26,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: dependabot-release-bump-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
 jobs:
   bump:
     name: Bump release version
@@ -27,6 +37,15 @@ jobs:
     if: github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]'
 
     steps:
+      - name: Require the release bump token
+        run: |
+          if [ -z "${RELEASE_BUMP_TOKEN}" ]; then
+            echo "::error::RELEASE_BUMP_TOKEN is missing. Add it as a Dependabot secret; see the comment at the top of this workflow."
+            exit 1
+          fi
+        env:
+          RELEASE_BUMP_TOKEN: ${{ secrets.RELEASE_BUMP_TOKEN }}
+
       - name: Check out pull request branch
         uses: actions/checkout@v7
         with:

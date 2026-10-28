@@ -5,7 +5,10 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import {
   addChangelogEntry,
+  describeChanges,
+  listDependencyChanges,
   nextPatchVersion,
+  readManifestAtRef,
   replaceNth,
   runBumpRelease,
   runBumpReleaseCliIfMain,
@@ -27,7 +30,15 @@ function createFiles() {
   };
 }
 
-function runWith({ files = createFiles(), head = '1.2.3', base = '1.2.3', changelog = CHANGELOG, errors = ['err'], env = {} } = {}) {
+function runWith({
+  files = createFiles(),
+  head = '1.2.3',
+  base = '1.2.3',
+  changelog = CHANGELOG,
+  errors = ['err'],
+  env = {},
+  manifests = { base: {}, head: {} }
+} = {}) {
   const writes = [];
   const output = [];
   const result = runBumpRelease({
@@ -36,6 +47,7 @@ function runWith({ files = createFiles(), head = '1.2.3', base = '1.2.3', change
     verifyImpl: () => errors,
     readVersionImpl: (ref) => (ref === 'HEAD' ? head : base),
     readChangelogImpl: () => changelog,
+    readManifestImpl: (ref) => (ref === 'HEAD' ? manifests.head : manifests.base),
     readFileImpl: (path) => files[path],
     writeFileImpl: (path, contents) => {
       files[path] = contents;
@@ -65,6 +77,53 @@ test('sanitizeSummary collapses whitespace, truncates, and falls back to a defau
   assert.equal(sanitizeSummary(undefined), 'Update dependencies.');
 });
 
+test('sanitizeSummary puts @mentions in code so release notes cannot notify anyone', () => {
+  assert.equal(
+    sanitizeSummary('bump @types/node and (@scope/pkg) with `@x` plus user@example.com'),
+    'bump `@types/node` and (`@scope/pkg`) with `@x` plus user@example.com'
+  );
+});
+
+test('listDependencyChanges reports added and changed ranges only', () => {
+  const base = {
+    dependencies: { express: '^5.3.0', zod: '^4.0.0' },
+    devDependencies: { eslint: '^10.11.0' },
+    overrides: { katex: { nested: '1.0.0' } }
+  };
+  const head = {
+    dependencies: { express: '^5.3.1', zod: '^4.0.0' },
+    devDependencies: { eslint: '^10.11.0', '@playwright/test': '^1.64.1' },
+    overrides: { katex: { nested: '1.0.1' }, 'smol-toml': '1.6.1' }
+  };
+
+  assert.deepEqual(listDependencyChanges(base, head), [
+    '`express` ^5.3.1',
+    '`@playwright/test` ^1.64.1',
+    '`smol-toml` 1.6.1'
+  ]);
+  assert.deepEqual(listDependencyChanges({}, {}), []);
+});
+
+test('describeChanges lists dependency changes or falls back to the sanitized summary', () => {
+  assert.equal(describeChanges(['`a` 1', '`b` 2'], 'ignored'), 'Update `a` 1, `b` 2.');
+  assert.equal(describeChanges([], 'Bump @types/node'), 'Bump `@types/node`');
+  assert.equal(describeChanges([], undefined), 'Update dependencies.');
+});
+
+test('readManifestAtRef parses package.json at a git ref', () => {
+  const calls = [];
+  const manifest = readManifestAtRef('origin/main', {
+    execGitImpl: (args) => {
+      calls.push(args);
+      return '{"version":"1.2.3"}';
+    }
+  });
+
+  assert.deepEqual(manifest, { version: '1.2.3' });
+  assert.deepEqual(calls, [['show', 'origin/main:package.json']]);
+  assert.throws(() => readManifestAtRef('bad ref;'), /Invalid git ref/);
+});
+
 test('addChangelogEntry inserts the newest entry first', () => {
   assert.equal(
     addChangelogEntry(CHANGELOG, '1.2.4', '2026-10-28', 'Bump x.'),
@@ -91,6 +150,21 @@ test('runBumpRelease bumps every version file and adds a changelog entry', () =>
   assert.match(files['SECURITY.md'], /\| 1\.2\.4 \| ✓ \|/);
   assert.match(files['public/openapi.yaml'], / {2}version: 1\.2\.4\n/);
   assert.match(files['CHANGELOG.md'], /## 1\.2\.4 - 2026-10-28\n\n- Bump dep from 1 to 2\n/);
+});
+
+test('runBumpRelease describes the dependency changes in the changelog entry', () => {
+  const { files } = runWith({
+    env: { RELEASE_BUMP_SUMMARY: 'bump the npm-development group across 1 directory' },
+    manifests: {
+      base: { devDependencies: { eslint: '^10.11.0' } },
+      head: { devDependencies: { eslint: '^10.13.0', '@playwright/test': '^1.64.1' } }
+    }
+  });
+
+  assert.match(
+    files['CHANGELOG.md'],
+    /## 1\.2\.4 - 2026-10-28\n\n- Update `eslint` \^10\.13\.0, `@playwright\/test` \^1\.64\.1\.\n/
+  );
 });
 
 test('runBumpRelease bumps above the base version when the branch is behind it', () => {
@@ -140,6 +214,7 @@ test('runBumpRelease reads and writes real files by default', () => {
       verifyImpl: () => ['err'],
       readVersionImpl: () => '1.2.3',
       readChangelogImpl: () => CHANGELOG,
+      readManifestImpl: () => ({}),
       stdout: { write: (value) => written.push(value) }
     });
 
@@ -168,23 +243,38 @@ test('runBumpReleaseCliIfMain delegates to the bump runner only when executed', 
 test('Dependabot release bump workflow only runs for Dependabot and passes untrusted values via env', () => {
   const workflow = readWorkflow('.github/workflows/dependabot-release-bump.yml');
   const job = workflow.jobs.bump;
+  const stepNamed = (name) => job.steps.find((step) => step.name === name);
   const runs = job.steps.filter((step) => step.run).map((step) => step.run);
 
   assert.equal(workflow.permissions.contents, 'read');
   assert.match(job.if, /github\.event\.pull_request\.user\.login == 'dependabot\[bot\]'/);
   assert.match(job.if, /github\.actor == 'dependabot\[bot\]'/);
-  assert.equal(job.steps[0].with.token, '${{ secrets.RELEASE_BUMP_TOKEN }}');
-  assert.equal(job.steps[0].with['fetch-depth'], 0);
+  assert.equal(stepNamed('Check out pull request branch').with.token, '${{ secrets.RELEASE_BUMP_TOKEN }}');
+  assert.equal(stepNamed('Check out pull request branch').with['fetch-depth'], 0);
   assert.ok(runs.length > 0);
 
   for (const run of runs) {
     assert.doesNotMatch(run, /\$\{\{/);
   }
 
-  const bumpStep = job.steps.find((step) => step.name === 'Bump version and changelog');
+  const bumpStep = stepNamed('Bump version and changelog');
+  const trustedStep = stepNamed('Check out trusted release scripts from the base branch');
 
   assert.equal(bumpStep.run, 'node trusted/scripts/bump-release.mjs');
-  assert.equal(job.steps[1].with.path, 'trusted');
-  assert.equal(job.steps[1].with.ref, '${{ github.event.pull_request.base.ref }}');
   assert.equal(bumpStep.env.RELEASE_BUMP_SUMMARY, '${{ github.event.pull_request.title }}');
+  assert.equal(trustedStep.with.path, 'trusted');
+  assert.equal(trustedStep.with.ref, '${{ github.event.pull_request.base.ref }}');
+});
+
+test('Dependabot release bump workflow fails clearly without its token and serializes runs per PR', () => {
+  const workflow = readWorkflow('.github/workflows/dependabot-release-bump.yml');
+  const [tokenStep, checkoutStep] = workflow.jobs.bump.steps;
+
+  assert.equal(tokenStep.name, 'Require the release bump token');
+  assert.match(tokenStep.run, /-z "\$\{RELEASE_BUMP_TOKEN\}"/);
+  assert.match(tokenStep.run, /exit 1/);
+  assert.equal(tokenStep.env.RELEASE_BUMP_TOKEN, '${{ secrets.RELEASE_BUMP_TOKEN }}');
+  assert.equal(checkoutStep.name, 'Check out pull request branch');
+  assert.equal(workflow.concurrency.group, 'dependabot-release-bump-${{ github.event.pull_request.number }}');
+  assert.equal(workflow.concurrency['cancel-in-progress'], false);
 });

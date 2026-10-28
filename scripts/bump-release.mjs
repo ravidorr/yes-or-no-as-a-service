@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { isExecutedModule } from '../src/run-if-main.js';
-import { assertValidGitRef } from './git-exec.mjs';
+import { assertValidGitRef, execGit } from './git-exec.mjs';
 import {
   compareVersions,
   hasChangelogEntry,
@@ -12,6 +12,9 @@ import {
 
 const DEFAULT_SUMMARY = 'Update dependencies.';
 const MAX_SUMMARY_LENGTH = 200;
+const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies', 'optionalDependencies', 'overrides'];
+// A bare @name in release notes can notify a GitHub user or team, so put it in code.
+const MENTION_PATTERN = /(^|[\s(])(@[\w.-]+(?:\/[\w.-]+)?)/g;
 
 export function nextPatchVersion(version) {
   const [major, minor, patch] = parseVersion(version);
@@ -38,16 +41,46 @@ export function replaceNth(contents, search, replacement, count = 1) {
 }
 
 export function sanitizeSummary(summary) {
-  const text = String(summary ?? '').replace(/\s+/g, ' ').trim().slice(0, MAX_SUMMARY_LENGTH);
+  const text = String(summary ?? '')
+    .replace(/`/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, MAX_SUMMARY_LENGTH)
+    .replace(MENTION_PATTERN, '$1`$2`');
 
   return text || DEFAULT_SUMMARY;
+}
+
+export function listDependencyChanges(baseManifest, headManifest) {
+  return DEPENDENCY_SECTIONS.flatMap((section) => {
+    const base = baseManifest[section] ?? {};
+    const head = headManifest[section] ?? {};
+
+    return Object.entries(head)
+      .filter(([name, range]) => typeof range === 'string' && base[name] !== range)
+      .map(([name, range]) => `\`${name}\` ${range}`);
+  });
+}
+
+export function describeChanges(changes, fallbackSummary) {
+  if (changes.length === 0) {
+    return sanitizeSummary(fallbackSummary);
+  }
+
+  return `Update ${changes.join(', ')}.`;
+}
+
+export function readManifestAtRef(ref, { execGitImpl = execGit } = {}) {
+  assertValidGitRef(ref);
+
+  return JSON.parse(execGitImpl(['show', `${ref}:package.json`]));
 }
 
 export function addChangelogEntry(changelog, version, date, summary) {
   return replaceNth(
     changelog,
     '# Changelog\n\n',
-    `# Changelog\n\n## ${version} - ${date}\n\n- ${sanitizeSummary(summary)}\n\n`
+    `# Changelog\n\n## ${version} - ${date}\n\n- ${summary}\n\n`
   );
 }
 
@@ -79,6 +112,7 @@ export function runBumpRelease({
   verifyImpl = verifyReleaseNotesAgainstBase,
   readVersionImpl = readPackageVersionAtRef,
   readChangelogImpl = readChangelogAtRef,
+  readManifestImpl = readManifestAtRef,
   readFileImpl = (path) => readFileSync(path, 'utf8'),
   writeFileImpl = writeFileSync,
   stdout = process.stdout
@@ -105,10 +139,14 @@ export function runBumpRelease({
 
   if (!hasChangelogEntry(changelog, version)) {
     const date = now().toISOString().slice(0, 10);
+    const summary = describeChanges(
+      listDependencyChanges(readManifestImpl(baseRef), readManifestImpl('HEAD')),
+      env.RELEASE_BUMP_SUMMARY
+    );
 
     writeFileImpl(
       'CHANGELOG.md',
-      addChangelogEntry(readFileImpl('CHANGELOG.md'), version, date, env.RELEASE_BUMP_SUMMARY)
+      addChangelogEntry(readFileImpl('CHANGELOG.md'), version, date, summary)
     );
   }
 
