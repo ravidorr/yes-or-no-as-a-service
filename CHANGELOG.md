@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.2.12 - 2026-10-28
+
+- Bump development tooling: `@playwright/test` 1.64.1, `eslint` 10.13.0,
+  `html-validate` 11.17.0, and `markdownlint-cli2` 0.24.0.
+- Refresh transitive production dependencies in the lockfile to clear `npm audit`
+  findings.
+
 ## 2.2.11 - 2026-10-28
 
 - Bump `@modelcontextprotocol/sdk` to 1.32.2.
