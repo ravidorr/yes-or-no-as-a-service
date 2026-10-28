@@ -40,6 +40,25 @@ publish_release_package() {
   npm publish --access public --provenance
 }
 
+# npm can take a few minutes to serve a version right after "npm publish"
+# ("Your package is being processed"), so poll until it appears. Only a 404
+# retries; other registry errors still fail immediately via npm_view_spec.
+wait_for_version() {
+  local spec="$1"
+  local attempts="${VERIFY_ATTEMPTS:-30}"
+  local interval="${VERIFY_INTERVAL_SECONDS:-10}"
+  local attempt=1
+
+  while ! npm_view_spec "$spec"; do
+    if [ "$attempt" -ge "$attempts" ]; then
+      return 1
+    fi
+    echo "${spec} is not available yet (attempt ${attempt}/${attempts}); retrying in ${interval}s."
+    attempt=$((attempt + 1))
+    sleep "$interval"
+  done
+}
+
 verify_release_on_npm() {
   local package="$1"
   local version="$2"
@@ -50,7 +69,7 @@ verify_release_on_npm() {
     return 1
   fi
 
-  if ! npm_view_spec "${package}@${version}"; then
+  if ! wait_for_version "${package}@${version}"; then
     echo "::error::${package}@${version} is not on npm after the publish step."
     return 1
   fi
