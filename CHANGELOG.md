@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.2.15 - 2026-10-28
+
+- Make the Release workflow's npm verification wait for a freshly published
+  version to appear (up to about five minutes) instead of failing on the first
+  check, because npm can take a few minutes to serve a version after publish.
+  Registry errors other than a missing version still fail immediately.
+- Document the trusted publisher's **Allow npm publish** setting, which must be
+  enabled for the Release workflow to publish.
+
 ## 2.2.14 - 2026-10-28
 
 - Add a workflow that bumps the patch version and adds a changelog entry on

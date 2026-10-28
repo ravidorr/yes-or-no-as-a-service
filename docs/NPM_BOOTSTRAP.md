@@ -51,6 +51,8 @@ a supported cloud CI runner. GitHub Actions adds provenance on later releases.
    - Repository: `yes-or-no-as-a-service`
    - Workflow filename: `release.yml`
    - Environment: (leave empty unless you use a GitHub Environment)
+   - Allowed actions: tick **Allow `npm publish`**. Without it the workflow's
+     `npm publish` is rejected with `403 ... OIDC permission denied`.
 
 Save the trusted publisher **after** the package exists from step 3.
 
@@ -92,6 +94,17 @@ npm view @ravidor/yesornoaas version
 
 - Confirm `id-token: write` on the Release job (already set in `release.yml`).
 - Confirm Trusted Publisher matches `release.yml` exactly.
+- `403 ... OIDC permission denied for this action` with matching repo and
+  workflow means **Allow `npm publish`** is not enabled (and saved) on the
+  trusted publisher.
+
+### Verify npm release fails right after a successful publish
+
+npm can take a few minutes to serve a new version ("Your package is being
+processed"). Verify polls for up to about five minutes
+(`VERIFY_ATTEMPTS` x `VERIFY_INTERVAL_SECONDS`, default 30 x 10s). If it still
+fails, re-run the failed Release job once the version appears in
+`npm view @ravidor/yesornoaas version`.
 
 ### Bootstrap version already merged but never published
 

@@ -33,10 +33,16 @@ esac
   return dir;
 }
 
-function runScript(command, packageName, version, responses) {
+function runScript(command, packageName, version, responses, env = {}) {
   const mockDir = createMockNpm(responses);
   return spawnSync('bash', [scriptPath, command, packageName, version], {
-    env: { ...process.env, PATH: `${mockDir}:${process.env.PATH}` },
+    env: {
+      ...process.env,
+      VERIFY_ATTEMPTS: '3',
+      VERIFY_INTERVAL_SECONDS: '0',
+      ...env,
+      PATH: `${mockDir}:${process.env.PATH}`
+    },
     encoding: 'utf8'
   });
 }
@@ -110,7 +116,31 @@ test('verify fails when the package exists but the version is missing', () => {
   });
 
   assert.equal(result.status, 1);
+  assert.match(result.stdout, /not available yet \(attempt 2\/3\)/);
   assert.match(result.stdout, /not on npm after the publish step/);
+});
+
+test('verify waits for a freshly published version to appear on npm', () => {
+  const counter = join(mkdtempSync(join(tmpdir(), 'release-npm-count-')), 'count');
+  const result = runScript('verify', '@ravidor/yesornoaas', '2.2.9', {
+    '@ravidor/yesornoaas@latest': 'echo "2.2.8"',
+    '@ravidor/yesornoaas@2.2.9': `n=$(cat ${counter} 2>/dev/null || echo 0); echo $((n + 1)) > ${counter}; if [ "$n" -ge 2 ]; then echo "2.2.9"; else echo "404 Not Found" >&2; exit 1; fi`
+  });
+
+  assert.equal(result.status, 0);
+  assert.match(result.stdout, /not available yet \(attempt 1\/3\)/);
+  assert.match(result.stdout, /Verified @ravidor\/yesornoaas@2.2.9 on npm/);
+});
+
+test('verify does not retry registry errors', () => {
+  const result = runScript('verify', '@ravidor/yesornoaas', '2.2.9', {
+    '@ravidor/yesornoaas@latest': 'echo "2.2.8"',
+    '@ravidor/yesornoaas@2.2.9': 'echo "503 Service Unavailable" >&2; exit 1'
+  });
+
+  assert.equal(result.status, 2);
+  assert.doesNotMatch(result.stdout, /not available yet/);
+  assert.match(result.stderr, /registry error/);
 });
 
 test('verify succeeds when the release version is on npm', () => {
