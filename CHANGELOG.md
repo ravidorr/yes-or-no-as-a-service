@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.12 - 2026-10-28
+
+- Bump development tooling: `@playwright/test` 1.64.1, `eslint` 10.13.0,
+  `html-validate` 11.17.0, and `markdownlint-cli2` 0.24.0.
+
 ## 2.2.10 - 2026-10-13
 
 - Bump `@playwright/test` to 1.64.0 for end-to-end test tooling.
