@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.14 - 2026-10-28
+
+- Add a workflow that bumps the patch version and adds a changelog entry on
+  Dependabot pull requests, so they pass the release gate.
+
 ## 2.2.13 - 2026-10-28
 
 - Run the coverage test runner without colored output and ignore ANSI color

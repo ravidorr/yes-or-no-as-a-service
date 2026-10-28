@@ -1,0 +1,65 @@
+name: Dependabot Release Bump
+
+# Dependabot PRs change package.json but cannot bump the version or add a
+# changelog entry, so the release gate fails. This workflow adds both and pushes
+# to the PR branch.
+#
+# Pushes made with the default GITHUB_TOKEN do not trigger other workflows, so
+# this uses RELEASE_BUMP_TOKEN: a fine-grained personal access token (or GitHub
+# App token) with "Contents: write" on this repository. Store it as a Dependabot
+# secret (Settings > Secrets and variables > Dependabot), because Dependabot PRs
+# cannot read Actions secrets. The job only runs for Dependabot's own commits, so
+# the bump commit pushed with that token does not start another run. The bump
+# script runs from a checkout of the base branch, so Dependabot branches that
+# predate it still work.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  bump:
+    name: Bump release version
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]'
+
+    steps:
+      - name: Check out pull request branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_BUMP_TOKEN }}
+
+      - name: Check out trusted release scripts from the base branch
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+          path: trusted
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - name: Bump version and changelog
+        run: node trusted/scripts/bump-release.mjs
+        env:
+          RELEASE_BUMP_SUMMARY: ${{ github.event.pull_request.title }}
+
+      - name: Commit and push bump
+        run: |
+          if git diff --quiet; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --all --message "chore: bump version for dependency update"
+          git push origin "HEAD:${HEAD_REF}"
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
