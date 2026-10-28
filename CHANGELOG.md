@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.13 - 2026-10-28
+
+- Run the coverage test runner without colored output and ignore ANSI color
+  codes when parsing the report, so `npm run test:coverage` and `npm publish`
+  no longer report every file as missing in interactive color terminals.
+
 ## 2.2.12 - 2026-10-28
 
 - Bump development tooling: `@playwright/test` 1.64.1, `eslint` 10.13.0,

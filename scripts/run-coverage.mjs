@@ -18,6 +18,15 @@ export function buildCoverageArgs() {
   ];
 }
 
+// Node colors the report in interactive terminals, which breaks inventory parsing.
+export function buildCoverageEnv(env = process.env) {
+  const coverageEnv = { ...env, NO_COLOR: '1', NODE_DISABLE_COLORS: '1' };
+
+  delete coverageEnv.FORCE_COLOR;
+
+  return coverageEnv;
+}
+
 export function runCoverage({
   execPath = process.execPath,
   spawnSyncImpl = spawnSync,
@@ -28,6 +37,7 @@ export function runCoverage({
 } = {}) {
   const result = spawnSyncImpl(execPath, buildCoverageArgs(), {
     encoding: 'utf8',
+    env: buildCoverageEnv(),
     maxBuffer: 10 * 1024 * 1024,
     stdio: ['inherit', 'pipe', 'inherit']
   });

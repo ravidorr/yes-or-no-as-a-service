@@ -9,6 +9,7 @@ import {
   listJsFilesInDirectory,
   listSourceFiles,
   parseCoverageFiles,
+  stripAnsi,
   PRODUCTION_DIRECTORIES
 } from '../scripts/coverage-inventory.mjs';
 
@@ -95,6 +96,24 @@ test('parseCoverageFiles reads info-prefixed coverage rows from Node 24 output',
 `;
 
   assert.deepEqual([...parseCoverageFiles(output)].sort(), ['public/app.js', 'src/cli.js']);
+});
+
+test('parseCoverageFiles reads rows that Node colors with ANSI escape codes', () => {
+  const esc = String.fromCharCode(27);
+  const output = [
+    `${esc}[34mℹ${esc}[39m start of coverage report`,
+    `${esc}[34mℹ${esc}[39m src                    |        |          |         |`,
+    `${esc}[34mℹ${esc}[39m  cli.js                | 100.00 |   100.00 |  100.00 |`,
+    `${esc}[34mℹ${esc}[39m end of coverage report`
+  ].join('\n');
+
+  assert.deepEqual([...parseCoverageFiles(output)], ['src/cli.js']);
+});
+
+test('stripAnsi removes color codes and keeps plain text', () => {
+  const esc = String.fromCharCode(27);
+
+  assert.equal(stripAnsi(`${esc}[1;31mfailed${esc}[0m and plain`), 'failed and plain');
 });
 
 test('parseCoverageFiles ignores diagnostic lines outside the report', () => {
