@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.11 - 2026-10-28
+
+- Bump `@modelcontextprotocol/sdk` to 1.32.2.
+
 ## 2.2.10 - 2026-10-13
 
 - Bump `@playwright/test` to 1.64.0 for end-to-end test tooling.
