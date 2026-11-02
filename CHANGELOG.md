@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.16 - 2026-11-02
+
+- chore(deps-dev): bump eslint from 10.13.0 to 10.14.0 in the npm-development group
+
 ## 2.2.15 - 2026-10-28
 
 - Make the Release workflow's npm verification wait for a freshly published
