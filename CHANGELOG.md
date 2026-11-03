@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.17 - 2026-11-03
+
+- chore(deps): bump express-rate-limit from 8.7.1 to 8.7.2
+
 ## 2.2.16 - 2026-11-02
 
 - chore(deps-dev): bump eslint from 10.13.0 to 10.14.0 in the npm-development group
