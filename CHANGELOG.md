@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.19 - 2026-11-10
+
+- chore(deps): bump express-rate-limit from 8.7.2 to 8.7.3
+
 ## 2.2.18 - 2026-11-09
 
 - Update `stylelint` 18.0.0, `stylelint-config-standard` 41.0.0.
