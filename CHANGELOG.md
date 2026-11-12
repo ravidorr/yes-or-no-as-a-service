@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.20 - 2026-11-12
+
+- chore(deps): bump `@hono/node-server` from 2.1.3 to 2.1.8
+
 ## 2.2.19 - 2026-11-10
 
 - chore(deps): bump express-rate-limit from 8.7.2 to 8.7.3
