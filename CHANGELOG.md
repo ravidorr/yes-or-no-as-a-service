@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.21 - 2026-11-13
+
+- chore(deps): bump hono from 4.13.13 to 4.13.18
+
 ## 2.2.20 - 2026-11-12
 
 - chore(deps): bump `@hono/node-server` from 2.1.3 to 2.1.8
