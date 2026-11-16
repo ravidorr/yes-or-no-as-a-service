@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.22 - 2026-11-16
+
+- chore(deps): bump express-rate-limit from 8.7.3 to 8.7.4
+
 ## 2.2.21 - 2026-11-13
 
 - chore(deps): bump hono from 4.13.13 to 4.13.18
