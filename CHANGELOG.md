@@ -1,8 +1,12 @@
 # Changelog
 
-## 2.2.22 - 2026-11-16
+## 2.2.23 - 2026-11-19
 
 - chore(deps): bump express-rate-limit from 8.7.3 to 8.7.4
+
+## 2.2.22 - 2026-11-16
+
+- chore(deps-dev): bump the npm-development group with 2 updates
 
 ## 2.2.21 - 2026-11-13
 
