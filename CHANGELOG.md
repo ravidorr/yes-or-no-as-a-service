@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.22 - 2026-11-16
+
+- chore(deps-dev): bump the npm-development group with 2 updates
+
 ## 2.2.21 - 2026-11-13
 
 - chore(deps): bump hono from 4.13.13 to 4.13.18
