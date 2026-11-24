@@ -6,7 +6,7 @@ Security fixes are provided for the latest release only.
 
 | Version | Supported |
 | --- | --- |
-| 2.2.24 | ✓ |
+| 2.2.25 | ✓ |
 | Earlier releases | ✘ |
 
 ## Reporting a vulnerability
